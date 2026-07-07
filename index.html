@@ -13,29 +13,96 @@
     --text: #e8ecf4;
     --muted: #6b7494;
     --accent: #3b82f6;
-    --terminal-bg: #1a0a2e;
-    --terminal-border: #7c3aed;
-    --driver-bg: #0a1f0a;
-    --driver-border: #16a34a;
-    --current: #0e3a4a;
-    --current-border: #06b6d4;
     --green: #22c55e;
     --red: #ef4444;
-    --yellow: #f59e0b;
-    --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
-    --font-ui: 'Inter', system-ui, sans-serif;
+    --font-mono: 'Courier New', monospace;
+    --font-ui: system-ui, sans-serif;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-ui); min-height: 100vh; }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-ui);
+  /* LOGIN */
+  #loginScreen {
     min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    width: 100%;
+    max-width: 380px;
+  }
+  .login-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    justify-content: center;
+  }
+  .login-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+  }
+  .login-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+  .login-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .login-input:focus { border-color: var(--accent); }
+  .login-error {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.3);
+    color: var(--red);
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-top: 16px;
+    display: none;
+  }
+  .login-btn {
+    width: 100%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 11px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 24px;
+    transition: background 0.15s;
+  }
+  .login-btn:hover { background: #2563eb; }
 
-  /* HEADER */
+  /* BOARD */
+  #boardScreen { display: none; }
+
   header {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
@@ -48,497 +115,249 @@
     top: 0;
     z-index: 100;
   }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .last-updated { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
+  .signout-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+  .signout-btn:hover { border-color: var(--red); color: var(--red); }
 
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 700;
-    font-size: 15px;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-
-  .logo-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--green);
-    box-shadow: 0 0 8px var(--green);
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .last-updated {
-    font-size: 12px;
-    color: var(--muted);
-    font-family: var(--font-mono);
-  }
-
-  .refresh-btn {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-size: 13px;
-    cursor: pointer;
-    transition: border-color 0.15s;
-  }
-
-  .refresh-btn:hover { border-color: var(--accent); }
-
-  /* TABS */
-  .tab-bar {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    padding: 0 24px;
-    gap: 4px;
-  }
-
-  .tab {
-    padding: 10px 20px;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--muted);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: color 0.15s, border-color 0.15s;
-    user-select: none;
-  }
-
+  .tab-bar { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; padding: 0 24px; gap: 4px; }
+  .tab { padding: 10px 20px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; user-select: none; }
   .tab:hover { color: var(--text); }
   .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-  /* SEARCH + CONTROLS */
-  .controls {
-    padding: 16px 24px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-  }
-
-  .search-wrap {
-    position: relative;
-    flex: 1;
-    max-width: 360px;
-  }
-
-  .search-icon {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    font-size: 14px;
-    pointer-events: none;
-  }
-
-  .search-input {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 8px 12px 8px 36px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-family: var(--font-ui);
-    outline: none;
-    transition: border-color 0.15s;
-  }
-
+  .controls { padding: 12px 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); background: var(--surface); flex-wrap: wrap; }
+  .search-wrap { position: relative; flex: 1; max-width: 320px; }
+  .search-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px 12px 8px 32px; border-radius: 6px; font-size: 13px; outline: none; transition: border-color 0.15s; }
   .search-input:focus { border-color: var(--accent); }
   .search-input::placeholder { color: var(--muted); }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; pointer-events: none; }
+  .driver-count { font-size: 12px; color: var(--muted); font-family: var(--font-mono); white-space: nowrap; }
 
-  .driver-count {
-    font-size: 12px;
-    color: var(--muted);
-    font-family: var(--font-mono);
-    white-space: nowrap;
-  }
+  .refresh-btn { background: var(--accent); color: white; border: none; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; display: flex; align-items: center; gap: 6px; }
+  .refresh-btn:hover { background: #2563eb; }
+  .refresh-btn:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; }
+  .spinner-sm { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+  .refresh-btn.loading .spinner-sm { display: inline-block; }
+  .refresh-btn.loading .btn-text { display: none; }
+  .refresh-status { font-size: 12px; color: #f59e0b; font-family: var(--font-mono); }
 
-  /* LEGEND */
-  .legend {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    margin-left: auto;
-  }
+  .legend { display: flex; gap: 14px; align-items: center; margin-left: auto; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
 
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: var(--muted);
-  }
+  .board { padding: 20px 24px; }
 
-  .legend-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 2px;
-  }
+  .terminal-block { margin-bottom: 20px; }
+  .terminal-header { background: #1a0a2e; border: 1px solid #7c3aed; border-radius: 8px 8px 0 0; padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
+  .terminal-name { font-weight: 700; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #c084fc; }
+  .terminal-badge { background: #3b0764; color: #c084fc; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-family: var(--font-mono); }
 
-  /* BOARD */
-  .board {
-    padding: 20px 24px;
-  }
-
-  /* TERMINAL BLOCK */
-  .terminal-block {
-    margin-bottom: 24px;
-  }
-
-  .terminal-header {
-    background: var(--terminal-bg);
-    border: 1px solid var(--terminal-border);
-    border-radius: 8px 8px 0 0;
-    padding: 10px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .terminal-name {
-    font-weight: 700;
-    font-size: 13px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #c084fc;
-  }
-
-  .terminal-badge {
-    background: #3b0764;
-    color: #c084fc;
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-family: var(--font-mono);
-  }
-
-  /* DRIVER BLOCK */
-  .driver-block {
-    border-left: 1px solid var(--terminal-border);
-    border-right: 1px solid var(--terminal-border);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .driver-block:last-child {
-    border-bottom: 1px solid var(--terminal-border);
-    border-radius: 0 0 8px 8px;
-  }
-
-  .driver-header {
-    background: var(--driver-bg);
-    border-top: 1px solid var(--driver-border);
-    padding: 8px 16px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-    cursor: pointer;
-    user-select: none;
-  }
-
+  .driver-block { border-left: 1px solid #7c3aed; border-right: 1px solid #7c3aed; border-bottom: 1px solid var(--border); }
+  .driver-block:last-child { border-bottom: 1px solid #7c3aed; border-radius: 0 0 8px 8px; }
+  .driver-header { background: #0a1f0a; border-top: 1px solid #16a34a; padding: 8px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; cursor: pointer; user-select: none; }
   .driver-header:hover { background: #0d2a0d; }
-
-  .driver-name {
-    font-weight: 700;
-    font-size: 13px;
-    color: #86efac;
-    font-family: var(--font-mono);
-    min-width: 160px;
-  }
-
-  .driver-meta {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  .driver-meta-item {
-    font-size: 11px;
-    color: var(--muted);
-    font-family: var(--font-mono);
-  }
-
-  .driver-meta-item span {
-    color: var(--text);
-    font-weight: 600;
-  }
-
-  .driver-progress {
-    background: #052e16;
-    border: 1px solid #16a34a;
-    color: #86efac;
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-family: var(--font-mono);
-    font-weight: 700;
-  }
-
-  .collapse-icon {
-    margin-left: auto;
-    color: var(--muted);
-    font-size: 12px;
-    transition: transform 0.2s;
-  }
-
+  .driver-name { font-weight: 700; font-size: 13px; color: #86efac; font-family: var(--font-mono); min-width: 160px; }
+  .driver-meta { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .driver-meta-item { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+  .driver-meta-item span { color: var(--text); font-weight: 600; }
+  .driver-progress { background: #052e16; border: 1px solid #16a34a; color: #86efac; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-family: var(--font-mono); font-weight: 700; }
+  .collapse-icon { margin-left: auto; color: var(--muted); font-size: 12px; transition: transform 0.2s; }
   .driver-block.collapsed .collapse-icon { transform: rotate(-90deg); }
+  .driver-block.collapsed .stops-wrap { display: none; }
 
-  /* STOPS TABLE */
-  .stops-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-    font-family: var(--font-mono);
-  }
-
-  .stops-table th {
-    background: var(--surface2);
-    color: var(--muted);
-    font-weight: 600;
-    font-size: 10px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 6px 12px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-  }
-
-  .stops-table td {
-    padding: 7px 12px;
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 200px;
-  }
-
-  .stop-row { transition: background 0.1s; }
-  .stop-row:hover { background: rgba(255,255,255,0.03); }
+  .stops-table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--font-mono); }
+  .stops-table th { background: var(--surface2); color: var(--muted); font-weight: 600; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .stops-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
   .stop-row:last-child td { border-bottom: none; }
+  .stop-row:hover { background: rgba(255,255,255,0.02); }
+  .stop-row.current { background: #0e3a4a; border-left: 3px solid #06b6d4; }
+  .stop-row.current td:first-child { padding-left: 7px; }
+  .current-badge { display: inline-block; background: #06b6d4; color: #fff; font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 700; margin-left: 4px; vertical-align: middle; }
 
-  /* CURRENT STOP */
-  .stop-row.current {
-    background: var(--current);
-    border-left: 3px solid var(--current-border);
-  }
-
-  .stop-row.current td:first-child { padding-left: 9px; }
-
-  .current-badge {
-    display: inline-block;
-    background: var(--current-border);
-    color: #fff;
-    font-size: 9px;
-    padding: 1px 5px;
-    border-radius: 3px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    vertical-align: middle;
-    margin-left: 4px;
-  }
-
-  /* STATUS PILLS */
-  .status-pill {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-  }
-
+  .status-pill { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; }
   .status-A { background: rgba(34,197,94,0.2); color: #22c55e; }
   .status-E { background: rgba(239,68,68,0.2); color: #ef4444; }
 
-  /* EVENT CODE */
-  .event-code {
-    font-weight: 700;
-    font-size: 11px;
-  }
-
+  .event-code { font-weight: 700; font-size: 11px; }
   .event-LUL { color: #60a5fa; }
   .event-LLD { color: #a78bfa; }
   .event-XDL, .event-XDU { color: #f59e0b; }
   .event-BMT, .event-EMT { color: var(--muted); }
 
-  /* LOADING / ERROR / EMPTY */
-  .state-msg {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 80px 24px;
-    gap: 12px;
-    color: var(--muted);
-  }
-
+  .state-msg { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 24px; gap: 12px; color: var(--muted); }
   .state-msg .icon { font-size: 36px; }
   .state-msg .title { font-size: 16px; font-weight: 600; color: var(--text); }
-  .state-msg .sub { font-size: 13px; }
-
-  .spinner {
-    width: 32px;
-    height: 32px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
+  .state-msg .sub { font-size: 13px; text-align: center; }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* COLLAPSED STOPS */
-  .stops-wrap { overflow: hidden; }
-  .driver-block.collapsed .stops-wrap { display: none; }
-
-  /* API CONFIG NOTICE */
-  .config-notice {
-    background: #1c1400;
-    border: 1px solid #92400e;
-    border-radius: 8px;
-    padding: 16px 20px;
-    margin: 20px 24px;
-    font-size: 13px;
-    color: #fcd34d;
-    display: none;
-  }
-
-  .config-notice.visible { display: block; }
-  .config-notice code {
-    background: #2a1f00;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-  }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">
-    <div class="logo-dot"></div>
-    Norlo Driver Board
-  </div>
-  <div class="header-right">
-    <span class="last-updated" id="lastUpdated">—</span>
-    <button class="refresh-btn" onclick="loadCurrentTab()">↻ Refresh</button>
-  </div>
-</header>
-
-<div class="tab-bar">
-  <div class="tab active" data-role="ltl" onclick="switchTab(this)">LTL — Local</div>
-  <div class="tab" data-role="flatbed" onclick="switchTab(this)">Flatbed</div>
-  <div class="tab" data-role="otr" onclick="switchTab(this)">OTR</div>
-</div>
-
-<div class="controls">
-  <div class="search-wrap">
-    <span class="search-icon">⌕</span>
-    <input class="search-input" type="text" id="searchInput"
-           placeholder="Search driver, company, city…"
-           oninput="applySearch()">
-  </div>
-  <span class="driver-count" id="driverCount"></span>
-  <div class="legend">
-    <div class="legend-item">
-      <div class="legend-dot" style="background:#0e3a4a;border:1px solid #06b6d4"></div>
-      Current stop
-    </div>
-    <div class="legend-item">
-      <div class="legend-dot" style="background:rgba(34,197,94,0.2);border:1px solid #22c55e"></div>
-      Actual (A)
-    </div>
-    <div class="legend-item">
-      <div class="legend-dot" style="background:rgba(239,68,68,0.2);border:1px solid #ef4444"></div>
-      Estimated (E)
-    </div>
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo"><div class="login-dot"></div>Norlo Driver Board</div>
+    <label class="login-label">Username</label>
+    <input class="login-input" type="text" id="loginUser" autocomplete="username">
+    <label class="login-label">Password</label>
+    <input class="login-input" type="password" id="loginPass" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="login-error" id="loginError">Invalid username or password.</div>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
   </div>
 </div>
 
-<div class="config-notice" id="configNotice">
-  ⚠ API server not reachable. Update <code>API_BASE</code> at the top of this page to point to your NOLO-SQL01 server (e.g. <code>http://YOUR-SERVER-IP:5000</code>).
-</div>
+<!-- BOARD SCREEN -->
+<div id="boardScreen">
+  <header>
+    <div class="logo"><div class="logo-dot"></div>Norlo Driver Board</div>
+    <div class="header-right">
+      <span class="last-updated" id="lastUpdated">—</span>
+      <button class="signout-btn" onclick="signOut()">Sign out</button>
+    </div>
+  </header>
 
-<div class="board" id="board">
-  <div class="state-msg">
-    <div class="spinner"></div>
-    <div class="title">Loading drivers…</div>
+  <div class="tab-bar">
+    <div class="tab active" data-role="ltl" onclick="switchTab(this)">LTL — Local</div>
+    <div class="tab" data-role="flatbed" onclick="switchTab(this)">Flatbed</div>
+    <div class="tab" data-role="otr" onclick="switchTab(this)">OTR</div>
+  </div>
+
+  <div class="controls">
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input class="search-input" type="text" id="searchInput" placeholder="Search driver, company, city…" oninput="applySearch()">
+    </div>
+    <span class="driver-count" id="driverCount"></span>
+    <button class="refresh-btn" id="refreshBtn" onclick="triggerRefresh()">
+      <div class="spinner-sm"></div>
+      <span class="btn-text">↻ Refresh Board</span>
+    </button>
+    <span class="refresh-status" id="refreshStatus" style="display:none">Pulling data… up to 30s</span>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#0e3a4a;border:1px solid #06b6d4"></div>Current stop</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(34,197,94,0.2);border:1px solid #22c55e"></div>Actual (A)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(239,68,68,0.2);border:1px solid #ef4444"></div>Estimated (E)</div>
+    </div>
+  </div>
+
+  <div class="board" id="board">
+    <div class="state-msg"><div class="spinner"></div><div class="title">Loading drivers…</div></div>
   </div>
 </div>
 
 <script>
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
-// Change this to your NOLO-SQL01 IP or hostname once the API is running
 const API_BASE = "https://172.23.175.133";
+const API_KEY  = "B1sFLUS/g8z8V9TYmade2Mw4q2Jj0NqyxFuX+XN85FM=";
+const APP_USER = "NorloOPS";
+const APP_PASS = "DIspatch#1";
 // ─────────────────────────────────────────────────────────────────────────────
 
 let currentRole = "ltl";
 let boardData = null;
+let refreshPollTimer = null;
 let autoRefreshTimer = null;
 
+// AUTH
+function doLogin() {
+  const u = document.getElementById("loginUser").value;
+  const p = document.getElementById("loginPass").value;
+  if (u === APP_USER && p === APP_PASS) {
+    sessionStorage.setItem("norlo_auth", "1");
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("boardScreen").style.display = "block";
+    loadData();
+  } else {
+    document.getElementById("loginError").style.display = "block";
+  }
+}
+
+function signOut() {
+  sessionStorage.removeItem("norlo_auth");
+  document.getElementById("boardScreen").style.display = "none";
+  document.getElementById("loginScreen").style.display = "flex";
+  document.getElementById("loginUser").value = "";
+  document.getElementById("loginPass").value = "";
+  document.getElementById("loginError").style.display = "none";
+}
+
+// Check if already logged in this session
+if (sessionStorage.getItem("norlo_auth") === "1") {
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("boardScreen").style.display = "block";
+}
+
+// TAB
 function switchTab(el) {
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   el.classList.add("active");
   currentRole = el.dataset.role;
   document.getElementById("searchInput").value = "";
-  loadCurrentTab();
+  loadData();
 }
 
-async function loadCurrentTab() {
+// LOAD DATA
+async function loadData() {
   showLoading();
   try {
-    const res = await fetch(`${API_BASE}/api/${currentRole}`, { signal: AbortSignal.timeout(10000) });
+    const res = await fetch(`${API_BASE}/api/${currentRole}`, {
+      headers: { "X-API-Key": API_KEY }
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     boardData = await res.json();
-    document.getElementById("configNotice").classList.remove("visible");
     renderBoard(boardData);
-    document.getElementById("lastUpdated").textContent =
-      `Updated ${boardData.lastUpdated}`;
+    document.getElementById("lastUpdated").textContent = `Updated ${boardData.lastUpdated}`;
     scheduleAutoRefresh();
   } catch (err) {
     showError(err.message);
-    document.getElementById("configNotice").classList.add("visible");
+  }
+}
+
+// TRIGGER REFRESH
+async function triggerRefresh() {
+  const btn = document.getElementById("refreshBtn");
+  const status = document.getElementById("refreshStatus");
+  btn.classList.add("loading");
+  btn.disabled = true;
+  status.style.display = "inline";
+
+  try {
+    await fetch(`${API_BASE}/api/refresh/${currentRole}`, {
+      method: "POST",
+      headers: { "X-API-Key": API_KEY }
+    });
+    clearTimeout(refreshPollTimer);
+    refreshPollTimer = setTimeout(async () => {
+      await loadData();
+      btn.classList.remove("loading");
+      btn.disabled = false;
+      status.style.display = "none";
+    }, 32000);
+  } catch (err) {
+    btn.classList.remove("loading");
+    btn.disabled = false;
+    status.style.display = "none";
+    alert("Refresh failed: " + err.message);
   }
 }
 
 function scheduleAutoRefresh() {
   clearTimeout(autoRefreshTimer);
-  autoRefreshTimer = setTimeout(loadCurrentTab, 30000);
+  autoRefreshTimer = setTimeout(loadData, 60000);
 }
 
+// RENDER
 function renderBoard(data) {
   const board = document.getElementById("board");
   const search = document.getElementById("searchInput").value.toLowerCase();
   const terminals = data.terminals || [];
 
   if (terminals.length === 0) {
-    board.innerHTML = `<div class="state-msg">
-      <div class="icon">🚛</div>
-      <div class="title">No drivers dispatched</div>
-      <div class="sub">No active drivers found for this role.</div>
-    </div>`;
+    board.innerHTML = `<div class="state-msg"><div class="icon">🚛</div><div class="title">No drivers dispatched</div><div class="sub">No active drivers found for this role.</div></div>`;
     document.getElementById("driverCount").textContent = "";
     return;
   }
@@ -548,158 +367,110 @@ function renderBoard(data) {
 
   terminals.forEach(terminal => {
     const drivers = terminal.drivers || [];
-    const filteredDrivers = search
+    const filtered = search
       ? drivers.filter(d =>
           d.driverName.toLowerCase().includes(search) ||
           d.driverID.toLowerCase().includes(search) ||
-          d.stops.some(s =>
-            (s.stopCompany || "").toLowerCase().includes(search) ||
-            (s.city || "").toLowerCase().includes(search)
-          )
+          d.stops.some(s => (s.stopCompany||"").toLowerCase().includes(search) || (s.city||"").toLowerCase().includes(search))
         )
       : drivers;
 
-    if (filteredDrivers.length === 0) return;
-    totalDrivers += filteredDrivers.length;
+    if (filtered.length === 0) return;
+    totalDrivers += filtered.length;
 
     html += `<div class="terminal-block">
       <div class="terminal-header">
         <span class="terminal-name">${terminal.terminal}</span>
-        <span class="terminal-badge">${filteredDrivers.length} driver${filteredDrivers.length !== 1 ? "s" : ""}</span>
+        <span class="terminal-badge">${filtered.length} driver${filtered.length !== 1 ? "s" : ""}</span>
       </div>`;
 
-    filteredDrivers.forEach(driver => {
-      const depTime = driver.departedFromYard
-        ? formatTime(driver.departedFromYard)
-        : "N/A";
+    filtered.forEach(driver => {
+      const dep = driver.departedFromYard ? fmtTime(driver.departedFromYard) : "N/A";
       const elapsed = driver.elapsedFromYard || "N/A";
-      const progress = driver.tripProgress || "";
-      const driverKey = `${driver.driverID}-${driver.movementNum}`;
+      const key = `${driver.driverID}-${driver.movementNum}`;
 
-      html += `<div class="driver-block" id="db-${driverKey}">
-        <div class="driver-header" onclick="toggleDriver('${driverKey}')">
+      html += `<div class="driver-block" id="db-${key}">
+        <div class="driver-header" onclick="toggleDriver('${key}')">
           <span class="driver-name">${driver.driverName}</span>
           <div class="driver-meta">
             <span class="driver-meta-item">ID: <span>${driver.driverID}</span></span>
-            <span class="driver-meta-item">Departed: <span>${depTime}</span></span>
+            <span class="driver-meta-item">Departed: <span>${dep}</span></span>
             <span class="driver-meta-item">Elapsed: <span>${elapsed}</span></span>
             ${driver.equipClass ? `<span class="driver-meta-item">Equip: <span>${driver.equipClass}</span></span>` : ""}
           </div>
-          ${progress ? `<span class="driver-progress">${progress}</span>` : ""}
+          ${driver.tripProgress ? `<span class="driver-progress">${driver.tripProgress}</span>` : ""}
           <span class="collapse-icon">▾</span>
         </div>
         <div class="stops-wrap">
           <table class="stops-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Event</th>
-                <th>Company</th>
-                <th>City</th>
-                <th>ST</th>
-                <th>Arrival</th>
-                <th>Departure</th>
-                <th>Est</th>
-                <th>Dep</th>
-                <th>Order</th>
-                <th>Status</th>
-                <th>Pcs</th>
-              </tr>
-            </thead>
-            <tbody>`;
+            <thead><tr>
+              <th>#</th><th>Event</th><th>Company</th><th>City</th><th>ST</th>
+              <th>Arrival</th><th>Departure</th><th>Est</th><th>Dep</th>
+              <th>Order</th><th>Status</th><th>Pcs</th>
+            </tr></thead><tbody>`;
 
       (driver.stops || []).forEach(stop => {
         const isCurrent = stop.isCurrentStop === "1" || stop.isCurrentStop === 1;
-        const rowClass = isCurrent ? "stop-row current" : "stop-row";
-        const eventClass = `event-${stop.eventCode}`;
-        html += `<tr class="${rowClass}">
+        html += `<tr class="stop-row${isCurrent ? " current" : ""}">
           <td>${stop.stopSeq}</td>
-          <td><span class="event-code ${eventClass}">${stop.eventCode}</span>${isCurrent ? '<span class="current-badge">NOW</span>' : ""}</td>
-          <td title="${stop.stopCompany}">${truncate(stop.stopCompany, 28)}</td>
+          <td><span class="event-code event-${stop.eventCode}">${stop.eventCode}</span>${isCurrent ? '<span class="current-badge">NOW</span>' : ""}</td>
+          <td title="${stop.stopCompany}">${trunc(stop.stopCompany, 26)}</td>
           <td>${stop.city}</td>
           <td>${stop.state}</td>
-          <td>${formatDT(stop.arrival)}</td>
-          <td>${formatDT(stop.departure)}</td>
-          <td><span class="status-pill status-${stop.est}">${stop.est || "—"}</span></td>
-          <td><span class="status-pill status-${stop.dep}">${stop.dep || "—"}</span></td>
-          <td>${stop.orderNumber || "—"}</td>
-          <td>${stop.orderStatus || "—"}</td>
-          <td>${stop.orderPieces || "—"}</td>
+          <td>${fmtDT(stop.arrival)}</td>
+          <td>${fmtDT(stop.departure)}</td>
+          <td><span class="status-pill status-${stop.est}">${stop.est||"—"}</span></td>
+          <td><span class="status-pill status-${stop.dep}">${stop.dep||"—"}</span></td>
+          <td>${stop.orderNumber||"—"}</td>
+          <td>${stop.orderStatus||"—"}</td>
+          <td>${stop.orderPieces||"—"}</td>
         </tr>`;
       });
 
       html += `</tbody></table></div></div>`;
     });
-
     html += `</div>`;
   });
 
-  if (html === "") {
-    board.innerHTML = `<div class="state-msg">
-      <div class="icon">🔍</div>
-      <div class="title">No results</div>
-      <div class="sub">No drivers match "${search}".</div>
-    </div>`;
+  if (!html) {
+    board.innerHTML = `<div class="state-msg"><div class="icon">🔍</div><div class="title">No results</div><div class="sub">No drivers match "${search}".</div></div>`;
     document.getElementById("driverCount").textContent = "";
     return;
   }
 
   board.innerHTML = html;
-  document.getElementById("driverCount").textContent =
-    `${totalDrivers} driver${totalDrivers !== 1 ? "s" : ""}`;
+  document.getElementById("driverCount").textContent = `${totalDrivers} driver${totalDrivers !== 1 ? "s" : ""}`;
 }
 
-function applySearch() {
-  if (boardData) renderBoard(boardData);
-}
-
-function toggleDriver(key) {
-  const block = document.getElementById(`db-${key}`);
-  if (block) block.classList.toggle("collapsed");
-}
+function applySearch() { if (boardData) renderBoard(boardData); }
+function toggleDriver(key) { document.getElementById(`db-${key}`)?.classList.toggle("collapsed"); }
 
 function showLoading() {
-  document.getElementById("board").innerHTML = `<div class="state-msg">
-    <div class="spinner"></div>
-    <div class="title">Loading drivers…</div>
-  </div>`;
+  document.getElementById("board").innerHTML = `<div class="state-msg"><div class="spinner"></div><div class="title">Loading drivers…</div></div>`;
   document.getElementById("driverCount").textContent = "";
 }
-
 function showError(msg) {
-  document.getElementById("board").innerHTML = `<div class="state-msg">
-    <div class="icon">⚠</div>
-    <div class="title">Could not load data</div>
-    <div class="sub">${msg}</div>
-    <div class="sub" style="margin-top:8px;font-size:11px;">Make sure the API server is running on NOLO-SQL01:5000</div>
-  </div>`;
+  document.getElementById("board").innerHTML = `<div class="state-msg"><div class="icon">⚠</div><div class="title">Could not load data</div><div class="sub">${msg}</div><div class="sub" style="margin-top:8px;font-size:11px;color:#6b7494">Make sure you are on the Norlo network</div></div>`;
   document.getElementById("driverCount").textContent = "";
 }
-
-function formatDT(val) {
+function fmtDT(val) {
   if (!val) return "—";
   const s = String(val);
   if (s.includes("2049")) return "—";
-  // Show time only if today
   const m = s.match(/(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/);
-  if (!m) return s.slice(0, 16);
-  const today = new Date().toISOString().slice(0, 10);
+  if (!m) return s.slice(0,16);
+  const today = new Date().toISOString().slice(0,10);
   return m[1] === today ? m[2] : `${m[1].slice(5)} ${m[2]}`;
 }
-
-function formatTime(val) {
+function fmtTime(val) {
   if (!val) return "N/A";
   const m = String(val).match(/(\d{2}:\d{2})/);
   return m ? m[1] : val;
 }
-
-function truncate(str, len) {
+function trunc(str, len) {
   if (!str) return "—";
   return str.length > len ? str.slice(0, len) + "…" : str;
 }
-
-// Initial load
-loadCurrentTab();
 </script>
 </body>
 </html>
