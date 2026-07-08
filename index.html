@@ -412,11 +412,11 @@ function renderBoard(terminals) {
           <span class="driver-name">${driver.driverName}</span>
           <div class="driver-meta">
             <span class="driver-meta-item">ID: <span>${driver.driverID}</span></span>
-            <span class="driver-meta-item">Departed: <span>${dep}</span></span>
             <span class="driver-meta-item">Elapsed: <span>${driver.elapsedFromYard||"N/A"}</span></span>
             ${driver.equipClass ? `<span class="driver-meta-item">Equip: <span>${driver.equipClass}</span></span>` : ""}
             ${driver.scheduledStart ? `<span class="driver-meta-item">Sched: <span>${fmtChipTime(driver.scheduledStart)}</span></span>` : ""}
             ${driver.scheduledStart || driver.geotabLogin ? `<span class="driver-meta-item login-${classifyLogin(driver.scheduledStart, driver.geotabLogin)}">Login: <span>${driver.geotabLogin ? fmtChipTime(driver.geotabLogin) : "—"}</span></span>` : ""}
+            <span class="driver-meta-item">Departed: <span>${dep}</span></span>
           </div>
           ${driver.tripProgress ? `<span class="${progressClass}">${driver.tripProgress}</span>` : ""}
           ${isCompleted ? '<span style="font-size:11px;color:#22c55e;margin-left:4px;">✓ COMPLETE</span>' : ""}
