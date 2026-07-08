@@ -45,11 +45,19 @@
   .signout-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
   .signout-btn:hover { border-color: var(--red); color: var(--red); }
 
-  .tab-bar { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; padding: 0 24px; gap: 4px; }
+  .tab-bar { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; padding: 0 24px; gap: 4px; position: sticky; top: 56px; z-index: 99; align-items: center; }
   .tab { padding: 10px 20px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; user-select: none; }
   .tab:hover { color: var(--text); }
   .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
   .tab.completed-tab.active { color: #22c55e; border-bottom-color: #22c55e; }
+
+  .terminal-jump-bar { display: flex; gap: 6px; margin-left: auto; padding: 6px 0; flex-wrap: wrap; align-items: center; justify-content: flex-end; }
+  .terminal-jump-btn { background: #052e16; border: 1px solid #16a34a; color: #86efac; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-family: var(--font-mono); font-weight: 700; cursor: pointer; user-select: none; transition: background 0.15s, color 0.15s; letter-spacing: 0.04em; text-transform: uppercase; }
+  .terminal-jump-btn:hover { background: #14532d; color: #4ade80; }
+
+  .back-to-top { position: fixed; bottom: 24px; right: 24px; background: #052e16; border: 1px solid #16a34a; color: #86efac; font-size: 11px; padding: 8px 14px; border-radius: 20px; font-family: var(--font-mono); font-weight: 700; cursor: pointer; user-select: none; display: none; z-index: 150; box-shadow: 0 4px 12px rgba(0,0,0,0.4); transition: background 0.15s, color 0.15s; letter-spacing: 0.04em; text-transform: uppercase; }
+  .back-to-top:hover { background: #14532d; color: #4ade80; }
+  .back-to-top.visible { display: block; }
 
   .controls { padding: 12px 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); background: var(--surface); flex-wrap: wrap; }
   .search-wrap { position: relative; flex: 1; max-width: 320px; }
@@ -74,7 +82,7 @@
   .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
 
   .board { padding: 20px 24px; }
-  .terminal-block { margin-bottom: 20px; }
+  .terminal-block { margin-bottom: 20px; scroll-margin-top: 110px; }
   .terminal-header { background: #1a0a2e; border: 1px solid #7c3aed; border-radius: 8px 8px 0 0; padding: 10px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
   .terminal-header:hover { background: #220d3a; }
   .terminal-header.completed { background: #052e16; border-color: #16a34a; }
@@ -213,6 +221,7 @@
     <div class="tab" data-role="flatbed" onclick="switchTab(this)">Flatbed</div>
     <div class="tab" data-role="otr" onclick="switchTab(this)">OTR</div>
     <div class="tab completed-tab" data-role="completed" onclick="switchTab(this)">✓ Completed Trips</div>
+    <div class="terminal-jump-bar" id="terminalJumpBar"></div>
   </div>
 
   <div class="controls">
@@ -247,6 +256,8 @@
     <button class="hos-close" onclick="closeHOS()">Close</button>
   </div>
 </div>
+
+<button class="back-to-top" id="backToTop" onclick="scrollToTop()">↑ Top</button>
 
 <script>
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
@@ -422,6 +433,7 @@ function scheduleAutoRefresh() {
 
 function renderBoard(terminals) {
   const board = document.getElementById("board");
+  const jumpBar = document.getElementById("terminalJumpBar");
   const search = document.getElementById("searchInput").value.toLowerCase();
   const isCompleted = currentRole === "completed";
 
@@ -432,11 +444,13 @@ function renderBoard(terminals) {
       <div class="sub">Click Refresh ${isCompleted ? "Completed" : "Board"} to pull current data.</div>
     </div>`;
     document.getElementById("driverCount").textContent = "";
+    if (jumpBar) jumpBar.innerHTML = "";
     return;
   }
 
   let totalDrivers = 0;
   let html = "";
+  const rendered = [];
 
   terminals.forEach(terminal => {
     const filtered = search
@@ -452,6 +466,7 @@ function renderBoard(terminals) {
 
     const termClass = isCompleted ? "terminal-header completed" : "terminal-header";
     const termKey = `term-${terminal.terminal.replace(/\s+/g, '-')}`;
+    rendered.push({ name: terminal.terminal, key: termKey });
 
     html += `<div class="terminal-block">
       <div class="${termClass}" onclick="toggleTerminal('${termKey}')">
@@ -520,11 +535,18 @@ function renderBoard(terminals) {
   if (!html) {
     board.innerHTML = `<div class="state-msg"><div class="icon">🔍</div><div class="title">No results</div><div class="sub">No drivers match "${search}".</div></div>`;
     document.getElementById("driverCount").textContent = "";
+    if (jumpBar) jumpBar.innerHTML = "";
     return;
   }
 
   board.innerHTML = html;
   document.getElementById("driverCount").textContent = `${totalDrivers} driver${totalDrivers !== 1 ? "s" : ""}`;
+
+  if (jumpBar) {
+    jumpBar.innerHTML = rendered.map(t =>
+      `<span class="terminal-jump-btn" onclick="scrollToTerminal('${t.key}')">${t.name}</span>`
+    ).join("");
+  }
 }
 
 function applySearch() { if (boardData) renderBoard(boardData); }
@@ -542,6 +564,24 @@ function toggleTerminal(key) {
     if (icon) icon.style.transform = isHidden ? '' : 'rotate(-90deg)';
   }
 }
+
+// NAV — terminal quick-jump + back-to-top
+function scrollToTerminal(key) {
+  const inner = document.getElementById(key);
+  const block = inner ? inner.closest('.terminal-block') : null;
+  if (block) block.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('backToTop');
+  if (!btn) return;
+  if (window.scrollY > 400) btn.classList.add('visible');
+  else btn.classList.remove('visible');
+}, { passive: true });
 
 // HOS MODAL
 async function showHOS(email) {
