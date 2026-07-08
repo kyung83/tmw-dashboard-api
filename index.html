@@ -347,7 +347,7 @@ async function triggerRefresh() {
 
 function scheduleAutoRefresh() {
   clearTimeout(autoRefreshTimer);
-  autoRefreshTimer = setTimeout(loadData, 60000);
+  autoRefreshTimer = setTimeout(loadData, 180000);
 }
 
 function renderBoard(terminals) {
