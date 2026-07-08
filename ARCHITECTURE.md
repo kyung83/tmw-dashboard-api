@@ -23,6 +23,7 @@ It is NOT a public-facing application.
 - All sensitive values go in .env file only.
 - .env is always in .gitignore — never committed to GitHub under any circumstance.
 - .env.example contains placeholder values only — safe to commit.
+- ⚠️ **KNOWN VIOLATION (as of Jul 2026)**: the shipped `index.html` on GitHub Pages contains `APPS_SCRIPT_URL`, `API_TOKEN`, `APP_USER`, and `APP_PASS` hardcoded in client-side JavaScript, and the repo is public. Anyone can read them and hit the Apps Script endpoint. Login is client-side and bypassable. Not blocking dashboard operation, but must be rotated + repo made private or auth moved server-side.
 
 ### Source Control Rules
 - main branch = confirmed working code only.
@@ -30,11 +31,12 @@ It is NOT a public-facing application.
 - Never instruct user to push directly to main without confirming the change works first.
 - Every meaningful change gets committed before moving to the next step.
 
-### API Rules
-- x-api-key header validation on every endpoint. No exceptions.
-- Never expose raw SQL error messages in API responses.
-- Return clean JSON errors only.
-- One endpoint per dataset. Keep it simple.
+### API Rules (Apps Script web app)
+- Query-string token validation on every request (`?token=...`). Reject with `{error: "Unauthorized"}` if missing/wrong.
+- Never expose raw SQL or Sheet error messages in responses.
+- Return clean JSON errors only (`{error: "..."}`).
+- One action per query (`?action=read&role=...` or `?action=refresh&role=...`).
+- Redeploy required after any code change (Deploy → Manage deployments → pencil → New version → Deploy). Saving alone does not push live.
 
 ### Build Rules
 - One step at a time. Confirm each step works before writing the next.
@@ -45,52 +47,129 @@ It is NOT a public-facing application.
 
 ## System Architecture
 
+Original vision was Node.js Express in front of SQL. Shipped implementation is different — recorded below.
+
 ```
 Layer 1 — External Client
-  Looker Studio / Google Sheets
-  - HTTP calls to API only
-  - Sends x-api-key header
-  - NEVER connects directly to SQL Server
-  - NEVER contains business logic
+  Static index.html on GitHub Pages (kyung83.github.io/tmw-dashboard-api/)
+  - Vanilla JS, no build step, no framework (React CDN referenced but not used)
+  - Fetches Apps Script web app JSON with ?token=&action=read&role=
+  - Sends query-string token
+  - Positional COLUMNS array maps JSON array-of-arrays to named fields
+  - NEVER connects directly to SQL Server or a Google Sheet
+  - NEVER contains business logic beyond display/formatting
 
-Layer 2 — API (Node.js Express)
-  - Validates API key on every request
-  - Calls SQL layer via views or stored procs only
-  - Returns JSON
-  - Handles errors without exposing SQL internals
-  - MUST NOT query raw tables directly
-  - MUST NOT contain inline complex SQL
+Layer 2 — Apps Script Web App
+  Bound to the LTL Real Time Board Google Sheet workbook
+  - doGet(e) validates ?token= then dispatches on ?action=
+    - "read"    → reads the requested tab range and returns JSON rows
+    - "refresh" → writes a timestamp to _Control!B{roleRow} so Python picks it up
+  - Also owns applyFormatting_() which paints the sheet after Python writes
+  - Redeploy after every code change (New version) or nothing goes live
 
-Layer 3 — SQL Access Layer
-  - ALL database access via:
-      Views → simple read-only SELECT datasets
-      Stored Procedures → filtered or parameterized queries
-  - Naming: vw_LoadSheet / vw_OTRBoard / vw_DriverPlanning
-  - Naming: sp_GetLoadSheetByTerminal / sp_GetActiveOTR
-  - This layer is the safety boundary
+Layer 3 — Python Extract Script (data transport)
+  ltl_board_extract.py on NOLO-SQL01, launched via Task Scheduler "LTL Board Extract"
+  - Polls _Control tab every ~30s for role refresh flags
+  - Runs EXEC sp_GetLTLBoard @RoleBucket=?, @CompletedOnly=?
+  - Also reads the Driver Planning workbook's Logs tab and staples
+    ScheduledStart + GeotabLogin onto each driver's rows by name
+  - Writes to the matching role tab in the LTL Real Time Board workbook
+  - Uses pod_readonly (SQL login) + pod-pipeline-writer (Google service account)
+  - Read-only against TMW — only calls the proc
 
-Layer 4 — Database
-  Development: TMWGATE_Test (frozen 2024 snapshot — structural testing only)
-  Production:  TMWGATE (read-only SELECT via tmw_api_user)
+Layer 4 — SQL Access Layer
+  Stored Procedures (parameterized, read-only)
+  - sp_GetLTLBoard (@RoleBucket, @CompletedOnly) — 9-CTE proc, 29 output columns
+  - Naming convention going forward: sp_Get{Board}[{Filter}] (e.g. sp_GetLoadSheetByTerminal for future dashboards)
+  - This layer is the safety boundary — no ad-hoc SELECTs from the extract script
+
+Layer 5 — Database
+  Development: TMWGATE_Test (live ASR/Eleos synthetic fixtures — structure/vocab only, never volumes)
+  Production:  TMWGATE (read-only SELECT / EXEC via pod_readonly)
 ```
+
+---
+
+## Coordination & Deployment Discipline (lessons from Jul 8 2026)
+
+The pipeline has 5 layers and touching any one of them can affect the others.
+These rules exist because they've all been violated at least once already:
+
+### Multi-editor coordination on `index.html`
+- **Two people editing the same file in parallel is how work gets erased.** On Jul 8, a local git push at 10:05 (header button + scroll preservation) was overwritten 32 minutes later by a GitHub-web "Upload files" that carried a stale local copy. Git recorded it as one commit that both added a new feature AND wiped the earlier work.
+- **Rule: always `git pull` before editing `index.html`.** Doesn't matter if you're using local git, the GitHub web editor, or the "Upload files" button — pull first, or you might be starting from a stale copy.
+- **Rule: `git status` + `git log --oneline -3` before any edit session.** If your local's HEAD isn't `origin/main`'s HEAD, stop and reconcile.
+- The GitHub web "Upload files" flow does NOT warn about overwriting newer content. It just replaces the file. Treat it as destructive.
+- Commits made via the GitHub web UI show `committer: GitHub <noreply@github.com>` in `git log --format=fuller`. Commits via local `git push` show your identity. Useful diagnostic when investigating a mystery.
+
+### Adding a new column end-to-end (SQL → Python → Sheet → Apps Script → HTML)
+Order matters. Do them in this sequence or the dashboard breaks:
+
+1. **SQL proc** — add the column to `sp_GetLTLBoard`'s SELECT.
+2. **Python (`ltl_board_extract.py`)** — usually no change needed (writes whatever the proc returns). Verify the clear-range covers the new column (widen `A4:X` → `A4:AD` etc. if needed).
+3. **Apps Script `applyFormatting_`** — widen `sheet.getRange(5, 1, lastRow - 4, N).getValues()` to include the new column count.
+4. **Apps Script `doGet` (`action === "read"`)** — widen `sheet.getRange(5, 1, lastRow - 4, N).getValues()` here **too** (same number). This is the one that actually reaches the browser. Missing this is the #1 gotcha.
+5. **Deploy the Apps Script** — Deploy → Manage deployments → pencil on active → Version: **New version** → Deploy. Saving alone changes nothing on the live URL.
+6. **`index.html` `COLUMNS` array** — append the new field name in the **exact same position** the sheet has it. `COLUMNS` is positional — it maps array indices to named fields. If the sheet has 29 columns and you list 28, the last real value is silently dropped.
+7. **`index.html` `parseRows`** — capture `rec.NewField` on the driver object.
+8. **`index.html` `renderBoard`** — render it wherever it belongs.
+9. **Commit + push** `index.html`. Fastly cache invalidates in ~15-30 seconds.
+
+### Apps Script save vs deploy
+- **Save (Ctrl+S) does NOT push to the live URL.** It updates the editor draft only.
+- The live web app runs whatever version was last **deployed**, not what you last saved.
+- To actually push a change: Deploy → **Manage** deployments (not "New deployment", which creates a second web app with a different URL) → pencil icon → Version dropdown = **New version** → Deploy.
+- After deploy, verify by hitting the web app URL directly and checking the response — don't trust that "Deployment successfully updated" means what you wanted actually took effect.
+
+### The Apps Script "same number in two places" trap
+The Apps Script has `sheet.getRange(5, 1, lastRow - 4, N).getValues()` in two functions:
+- `applyFormatting_` (line ~70 in current file) — used by the sheet formatter
+- `doGet` inside `if (action === "read")` — used by the dashboard
+
+Both `N`s must match the sheet's actual column count. Changing only one leaves the other silently truncating data. On Jul 8 the `doGet` copy stayed at `26` for several minutes after `applyFormatting_` was updated to `29`, and the dashboard chips were blank the whole time.
+
+### `COLUMNS` array is positional, not by name
+```javascript
+const COLUMNS = ["RoleBucket", "EquipClass", ..., "GeotabLogin"];
+COLUMNS.forEach((col, i) => rec[col] = row[i] || "");
+```
+The array's **order** determines which JSON index maps to which field name. If the sheet reorders columns or you insert a new one, you MUST insert into `COLUMNS` at the same position — not at the end. Otherwise every field after that position gets misaligned.
+
+### JSON transport shape
+The Apps Script `doGet` returns:
+```json
+{ "rows": [ [col0, col1, col2, ...], [col0, col1, col2, ...], ... ] }
+```
+Array of arrays, not array of objects. Field names live only in the `index.html` `COLUMNS` array — they never leave the browser.
+
+### Fastly / GitHub Pages caching
+- GitHub Pages sits behind Fastly. Cache TTL on `index.html` is ~10 minutes but Fastly often invalidates faster on push.
+- Two browsers on the same URL can serve **different bytes** for the same seconds after a push. This is normal, not a bug.
+- Hard-refresh (Ctrl+F5) usually forces a fresh HTML fetch. If it doesn't, close the tab entirely and reopen — the JS engine's in-memory state can persist across Ctrl+F5.
+- Cache-buster query strings (`?_cb=<timestamp>`) force a bypass at both Fastly and the browser cache. Useful when debugging.
+- After a push, wait 15-30 seconds before assuming "the live page still shows the old version" is a real problem.
+
+### The pod-pipeline-writer service account
+- Google service account `pod-pipeline-writer@emerald-rhythm-500213-g2.iam.gserviceaccount.com` owns all writes to the LTL Real Time Board workbook.
+- **Also needs Viewer access on the Driver Planning workbook** so the Python can read the `Logs` tab for `ScheduledStart` + `GeotabLogin` join. If chips come back blank across the board, first thing to check is whether the service account is still shared on the planning workbook.
+- If shared drops or a new dashboard adds a new source workbook, share the service account (Viewer for reads, Editor for writes) before expecting data to appear.
 
 ---
 
 ## SQL User Setup
 
+Actual shipped setup for the LTL Trip Folder Board uses `pod_readonly`
+(carried over from the POD Quality Checker project). Password lives in the
+Python extract script's environment on NOLO-SQL01, not in this repo.
+
 ```sql
--- Run in TMWGATE_Test first, then repeat in TMWGATE for production
-CREATE LOGIN tmw_api_user WITH PASSWORD = '[value from .env — never hardcode]';
-
-USE TMWGATE_Test; -- switch to TMWGATE for production step
-CREATE USER tmw_api_user FOR LOGIN tmw_api_user;
-
--- Grant only what is needed — never db_datareader (too broad)
-GRANT SELECT ON dbo.vw_LoadSheet TO tmw_api_user;
-GRANT SELECT ON dbo.vw_OTRBoard TO tmw_api_user;
-GRANT SELECT ON dbo.vw_DriverPlanning TO tmw_api_user;
-GRANT EXECUTE ON dbo.sp_GetLoadSheetByTerminal TO tmw_api_user;
+-- Already exists in TMWGATE production (created for the POD project).
+-- Only new grant needed for the LTL Board was:
+GRANT EXECUTE ON dbo.sp_GetLTLBoard TO pod_readonly;
 ```
+
+For future dashboards, grant only what that dashboard needs. Never `db_datareader` (too broad).
+Naming convention for new procs: `sp_Get{BoardName}[{Filter}]`.
 
 ---
 
@@ -153,15 +232,28 @@ Never adjust the validation to match a bad query.
 
 ## Error Handling Standard
 
+**Apps Script `doGet` (returns JSON):**
+
 ```javascript
-try {
-  const result = await pool.request().query('SELECT * FROM vw_LoadSheet');
-  res.json(result.recordset);
-} catch (err) {
-  console.error('Internal query error:', err); // log internally only
-  res.status(500).json({ error: 'Data retrieval failed' }); // clean external response
+if (token !== validToken) {
+  return ContentService.createTextOutput(JSON.stringify({error: "Unauthorized"}))
+    .setMimeType(ContentService.MimeType.JSON);
 }
+// ... never surface SQL/Sheet internals to the browser
 ```
+
+**Python extract loop (writes status back to _Control):**
+
+```python
+try:
+    # fetch_board / write_board / etc.
+    set_status(client, role, "COMPLETE")
+except Exception as exc:
+    log(f"ERROR during {role} refresh: {exc}")
+    set_status(client, role, "ERROR", detail=str(exc)[:60])
+```
+
+Errors are logged internally and surface to dispatchers only as short status text on the sheet — never as raw exceptions.
 
 ---
 

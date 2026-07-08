@@ -12,11 +12,11 @@ and analysis of actual operational working documents.
 | Item | Value |
 |---|---|
 | Server | NOLO-SQL01.NOLO.LOCAL |
-| SQL Server Version | 14.0.3525.1 |
+| SQL Server Version | 14.0.3530.2 (SQL Server 2017 RTM-CU31-GDR, KB5090354) — post-patch level as of Jul 2026 |
 | TMW Version | 2021.1.1.2002 |
 | Production DB | TMWGATE |
 | Test DB | TMWGATE_Test |
-| Test DB Status | Frozen snapshot ~Nov 2024 — set up by ASR/Eleos for integration testing |
+| Test DB Status | Live w/ ASR/Eleos synthetic integration fixtures — dummy drivers dated through current sessions (STIST "Stinky Steve", ONEMO "Mock One" observed). NOT a frozen snapshot. |
 | Test DB Sync | Does NOT sync from production |
 | Access Method | Remote Desktop / Citrix → SSMS |
 
@@ -53,13 +53,34 @@ DO NOT modify, repurpose, or reference THR in this project.
 ## Operational Domain Knowledge
 
 ### Company Structure
-- 300+ drivers across 14+ terminal locations
+- ~285-300 active drivers (confirmed via manpowerprofile filter `mpp_status <> 'OUT'`) across 15 confirmed terminal codes plus UNK (unassigned/file-maintenance stragglers)
 - Two primary dispatch departments: OTR Scheduling and Backhaul Coordination
 - These two departments work in tandem and require shared visibility
 
 ### Terminal Locations
-Clare, Cadillac, Grand Rapids (GR), Boyne, Sussex WI, Ludington, Fort Wayne, Flint
-(validate full list against driver table)
+Confirmed 15-code map from `mpp_type2` (validated via TMW dropdown screenshots + manpowerprofile census, ranked by active driver count):
+
+| Code | Terminal | Confirmed |
+|---|---|---|
+| CL | Clare | ✅ |
+| GR | Grand Rapids | ✅ |
+| TA | Taylor | ✅ |
+| CD | Cadillac | ✅ |
+| LN | Lansing | ✅ |
+| BC | Boyne City | ✅ |
+| ED | Edmore | ✅ |
+| FA | Farwell | ✅ |
+| FL | Flint | ✅ |
+| FP | Fruitport | ✅ |
+| GY | Grayling | ✅ |
+| LU | Ludington | ✅ |
+| RC | Reed City | ✅ |
+| RO | Roscommon | ✅ |
+| TC | Traverse City | ✅ |
+| CH | (name unconfirmed — ~26 drivers) | ⚠️ pending |
+| UNK | Unassigned / file-maintenance stragglers | (data hygiene) |
+
+Older docs referenced "Sussex WI, Fort Wayne, Boyne" — **not present in the confirmed `mpp_type2` set**. Do not assume these are active terminals in TMW without re-verification.
 
 ### Driver Types
 OTR, Local, Part-Time, Box Truck, Team
@@ -168,8 +189,8 @@ daily operational status still requires dispatcher input
 ## Dashboard Architecture Requirement
 All dashboards must run on a batch timer and update dynamically from TMW data.
 Static snapshots are not acceptable — the operational value is in real-time or near-real-time data.
-Looker Studio is the target display layer for read-only dashboards.
-Google Sheets retained only for collaborative human-input fields.
+**Shipped display layer for the LTL Trip Folder Board is a static `index.html` on GitHub Pages** (kyung83.github.io/tmw-dashboard-api/), fetching JSON from an Apps Script web app that reads the LTL Real Time Board Google Sheet. Looker Studio was in the original vision but is not in use.
+Google Sheets retained for (a) the transport buffer between Python and the browser, and (b) collaborative human-input fields like the Driver Planning workbook.
 
 ---
 
@@ -184,16 +205,29 @@ Primary operational data source.
 - Truck and trailer assignments
 - Company/customer codes
 
-### 2. Geotab API
+### 2. Driver Planning workbook — `Logs` tab (Google Sheets)
+Owned by ops. Written by existing Apps Script automations that already tracked
+scheduled starts and Geotab login times.
+- Columns used by the LTL Trip Folder Board:
+  - **Full Name** (column R) — driver's full name, format `LAST, FIRST` (with space after comma, differs from TMW which uses `LAST,FIRST` no space)
+  - **Email** (column S) — Geotab account email
+  - **Scheduled Start** (column D in Logs) — the shift start time set by planning
+  - **Login Time** (column E in Logs) — first Geotab login timestamp captured that day
+  - **OTR marker** (column T) — `x` in this cell means "skip start-time check for this driver." This is a deliberate failsafe because OTR drivers need different start-time tracking logic than local drivers. Python respects this — OTR drivers with `x` produce blank `ScheduledStart`/`GeotabLogin` on the board rather than false late/early signals.
+- Join key: driver name. Python normalizes both sides before matching.
+- Nickname vs legal name is a real problem: Logs may say `Bigelow, Steve` while TMW carries `BIGELOW,STEVEN`. Those don't match and produce blank chips until an mpp_id/email crosswalk is added.
+- Login time can look stale (e.g. `12:50 AM` when scheduled start is `4:00 PM`). That usually means the driver hasn't started their shift yet and the value is from a prior session. The dashboard treats a login >2 hours before scheduled start as "not yet logged in" (muted chip), not "very early" (green).
+
+### 3. Geotab API
 Vehicle and driver location data.
 - Already integrated by project owner via existing Apps Script automations
 - Used in driver planning sheet right-column automations today
 - Will be integrated properly in the professional rebuild
 - Provides: real-time vehicle location, driver ETA data
-- Scope: out of scope for Phase 1 (Load Sheet, OTR boards)
-- Scope: required for Phase 2 (Driver Planning Sheet dynamic rebuild)
+- Scope: out of scope for LTL Trip Folder Board (login times come from the Logs tab, not from Geotab directly)
+- Scope: required for future Driver Planning Sheet dynamic rebuild
 
-### 3. Human Input Layer
+### 4. Human Input Layer
 Operational judgment that lives in no system.
 - OTR board planning notes and routing decisions
 - Confirm driver flags
