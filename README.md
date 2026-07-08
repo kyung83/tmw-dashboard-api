@@ -141,6 +141,8 @@ Looker Studio not in use.
 9. ✅ Deployed static `index.html` on GitHub Pages (main branch root) with token-based auth against the Apps Script web app
 10. ✅ Joined driver login times server-side in Python from the Driver Planning workbook's Logs tab (ScheduledStart + GeotabLogin)
 11. ✅ Added Completed Trips tab (SQL `@CompletedOnly` + frontend rendering)
+12. ✅ Added HOS chip per driver — Apps Script `action=hos&email=X` calls Geotab, `index.html` opens modal with Drive Time Remaining + Workday Remaining (Jul 8 2026)
+13. ✅ Applied `content-visibility: auto` + `contain-intrinsic-size: auto 60px` to `.driver-block` in `index.html` to eliminate collapse/expand freeze on the 110-driver DOM (Jul 8 2026 — see ARCHITECTURE.md for the paint/composite lesson)
 
 **Deferred / Not started:**
 - ⏸ Load Sheet & Shuttle Sheet dashboards (DOMO field confirmations still open)

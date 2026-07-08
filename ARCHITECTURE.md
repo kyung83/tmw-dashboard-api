@@ -154,6 +154,22 @@ Array of arrays, not array of objects. Field names live only in the `index.html`
 - **Also needs Viewer access on the Driver Planning workbook** so the Python can read the `Logs` tab for `ScheduledStart` + `GeotabLogin` join. If chips come back blank across the board, first thing to check is whether the service account is still shared on the planning workbook.
 - If shared drops or a new dashboard adds a new source workbook, share the service account (Viewer for reads, Editor for writes) before expecting data to appear.
 
+### Rendering containment on large boards (`content-visibility: auto`)
+The LTL Trip Folder Board renders every active driver at once — ~110 driver blocks × ~5-8 stops each = ~750 table rows and ~16K DOM nodes in a single page. Without rendering containment, Chrome must include every driver block in every layout and paint pass. Toggling `display: none` on a single `.stops-wrap` then forces Chrome to invalidate paint for the entire vertical stack below it. On a workstation under memory pressure (Citrix + Chrome tabs collectively holding several GB), this compounds with Windows swap-in latency and produces a 10-20s freeze that affects other Chrome processes as well (not just the tab).
+
+**This is not a JS bug and cannot be diagnosed by profiling the click handler.** Programmatic and real-click toggles both measure 2-5ms in the handler itself. The freeze happens after the JS returns, in Chrome's async paint/composite phase.
+
+**Fix (shipped Jul 8 2026):** `.driver-block` in `index.html` carries:
+```css
+content-visibility: auto;
+contain-intrinsic-size: auto 60px;
+```
+`content-visibility: auto` lets Chrome skip style/layout/paint for off-screen blocks. `contain-intrinsic-size: auto 60px` reserves a placeholder height so scroll position stays stable and Chrome remembers the real size after first render. Ctrl+F browser find still traverses skipped content (Chrome 90+), and the `applySearch()` filter still works because it rebuilds the DOM from JS state rather than walking hidden nodes.
+
+**Rule for future dashboards:** any board that renders repeated blocks where N could hit triple digits (LTL Empty Board quadrant grid, OTR Fronthaul/Backhaul boards, Driver Planning Sheet rebuild) gets `content-visibility: auto` + a `contain-intrinsic-size` estimate on the repeated block class from day one. Cheap insurance. Do not wait until users report freezing.
+
+**Diagnostic trap to avoid:** when a user reports a freeze that "also lags the Claude extension" or "freezes the whole PC", that is the tell that the stall is browser-wide (paint/composite or OS-level), not a per-tab JS main-thread stall. Chrome's built-in Task Manager (Shift+Esc) separates tab processes from extension processes and confirms this quickly.
+
 ---
 
 ## SQL User Setup
