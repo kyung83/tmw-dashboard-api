@@ -39,6 +39,7 @@
   .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; letter-spacing: 0.05em; text-transform: uppercase; }
   .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .header-left { display: flex; align-items: center; gap: 16px; }
   .header-right { display: flex; align-items: center; gap: 16px; }
   .last-updated { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
   .signout-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
@@ -133,7 +134,14 @@
 <!-- BOARD -->
 <div id="boardScreen">
   <header>
-    <div class="logo"><div class="logo-dot"></div>Norlo Driver Board</div>
+    <div class="header-left">
+      <div class="logo"><div class="logo-dot"></div>Norlo Driver Board</div>
+      <button class="refresh-btn" id="refreshBtn" onclick="triggerRefresh()">
+        <div class="spinner-sm"></div>
+        <span class="btn-text">↻ Refresh Board</span>
+      </button>
+      <span class="refresh-status" id="refreshStatus" style="display:none">Pulling data… up to 30s</span>
+    </div>
     <div class="header-right">
       <span class="last-updated" id="lastUpdated">—</span>
       <button class="signout-btn" onclick="signOut()">Sign out</button>
@@ -152,11 +160,6 @@
       <input class="search-input" type="text" id="searchInput" placeholder="Search driver, company, city…" oninput="applySearch()">
     </div>
     <span class="driver-count" id="driverCount"></span>
-    <button class="refresh-btn" id="refreshBtn" onclick="triggerRefresh()">
-      <div class="spinner-sm"></div>
-      <span class="btn-text">↻ Refresh Board</span>
-    </button>
-    <span class="refresh-status" id="refreshStatus" style="display:none">Pulling data… up to 30s</span>
     <div class="legend">
       <div class="legend-item"><div class="legend-dot" style="background:#0e3a4a;border:1px solid #06b6d4"></div>Current stop</div>
       <div class="legend-item"><div class="legend-dot" style="background:rgba(34,197,94,0.2);border:1px solid #22c55e"></div>Actual (A)</div>
@@ -191,6 +194,7 @@ let currentRole = "ltl";
 let boardData = null;
 let refreshPollTimer = null;
 let autoRefreshTimer = null;
+let collapsedDrivers = new Set();
 
 // AUTH
 function doLogin() {
@@ -225,11 +229,13 @@ function switchTab(el) {
   el.classList.add("active");
   currentRole = el.dataset.role;
   document.getElementById("searchInput").value = "";
+  collapsedDrivers.clear();
   loadData();
 }
 
-async function loadData() {
-  showLoading();
+async function loadData(preserveScroll = false) {
+  const savedScroll = preserveScroll ? window.scrollY : 0;
+  if (!preserveScroll) showLoading();
   try {
     const url = `${APPS_SCRIPT_URL}?token=${encodeURIComponent(API_TOKEN)}&action=read&role=${currentRole}`;
     const res = await fetch(url);
@@ -239,6 +245,7 @@ async function loadData() {
     boardData = parseRows(json.rows || []);
     renderBoard(boardData);
     document.getElementById("lastUpdated").textContent = `Updated ${new Date().toLocaleTimeString()}`;
+    if (preserveScroll) requestAnimationFrame(() => window.scrollTo(0, savedScroll));
     scheduleAutoRefresh();
   } catch (err) {
     showError(err.message);
@@ -307,7 +314,7 @@ async function triggerRefresh() {
     await fetch(url);
     clearTimeout(refreshPollTimer);
     refreshPollTimer = setTimeout(async () => {
-      await loadData();
+      await loadData(true);
       btn.classList.remove("loading");
       btn.disabled = false;
       status.style.display = "none";
@@ -322,7 +329,7 @@ async function triggerRefresh() {
 
 function scheduleAutoRefresh() {
   clearTimeout(autoRefreshTimer);
-  autoRefreshTimer = setTimeout(loadData, 60000);
+  autoRefreshTimer = setTimeout(() => loadData(true), 60000);
 }
 
 function renderBoard(terminals) {
@@ -359,8 +366,9 @@ function renderBoard(terminals) {
     filtered.forEach(driver => {
       const dep = driver.departedFromYard ? fmtTime(driver.departedFromYard) : "N/A";
       const key = `${driver.driverID}-${driver.movementNum}`;
+      const collapsedClass = collapsedDrivers.has(key) ? " collapsed" : "";
 
-      html += `<div class="driver-block" id="db-${key}">
+      html += `<div class="driver-block${collapsedClass}" id="db-${key}">
         <div class="driver-header" onclick="toggleDriver('${key}')">
           <span class="driver-name">${driver.driverName}</span>
           <div class="driver-meta">
@@ -414,7 +422,13 @@ function renderBoard(terminals) {
 }
 
 function applySearch() { if (boardData) renderBoard(boardData); }
-function toggleDriver(key) { document.getElementById(`db-${key}`)?.classList.toggle("collapsed"); }
+function toggleDriver(key) {
+  const el = document.getElementById(`db-${key}`);
+  if (!el) return;
+  el.classList.toggle("collapsed");
+  if (el.classList.contains("collapsed")) collapsedDrivers.add(key);
+  else collapsedDrivers.delete(key);
+}
 function showLoading() {
   document.getElementById("board").innerHTML = `<div class="state-msg"><div class="spinner"></div><div class="title">Loading drivers…</div></div>`;
   document.getElementById("driverCount").textContent = "";
