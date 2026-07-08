@@ -48,7 +48,6 @@
   .tab { padding: 10px 20px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; user-select: none; }
   .tab:hover { color: var(--text); }
   .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .tab.completed-tab { color: var(--muted); }
   .tab.completed-tab.active { color: #22c55e; border-bottom-color: #22c55e; }
 
   .controls { padding: 12px 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); background: var(--surface); flex-wrap: wrap; }
@@ -75,18 +74,21 @@
 
   .board { padding: 20px 24px; }
   .terminal-block { margin-bottom: 20px; }
-  .terminal-header { background: #1a0a2e; border: 1px solid #7c3aed; border-radius: 8px 8px 0 0; padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
+  .terminal-header { background: #1a0a2e; border: 1px solid #7c3aed; border-radius: 8px 8px 0 0; padding: 10px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
+  .terminal-header:hover { background: #220d3a; }
   .terminal-header.completed { background: #052e16; border-color: #16a34a; }
+  .terminal-header.completed:hover { background: #063d1e; }
   .terminal-name { font-weight: 700; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #c084fc; }
   .terminal-header.completed .terminal-name { color: #86efac; }
   .terminal-badge { background: #3b0764; color: #c084fc; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-family: var(--font-mono); }
   .terminal-header.completed .terminal-badge { background: #14532d; color: #86efac; }
+  .terminal-collapse-icon { margin-left: auto; font-size: 12px; color: #c084fc; transition: transform 0.2s; }
+  .terminal-header.completed .terminal-collapse-icon { color: #86efac; }
 
   .driver-block { border-left: 1px solid #7c3aed; border-right: 1px solid #7c3aed; border-bottom: 1px solid var(--border); }
   .driver-block:last-child { border-bottom: 1px solid #7c3aed; border-radius: 0 0 8px 8px; }
   .driver-block.completed-driver { border-left-color: #16a34a; border-right-color: #16a34a; }
   .driver-block.completed-driver:last-child { border-bottom-color: #16a34a; }
-
   .driver-header { background: #0a1f0a; border-top: 1px solid #16a34a; padding: 8px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; cursor: pointer; user-select: none; }
   .driver-header:hover { background: #0d2a0d; }
   .driver-name { font-weight: 700; font-size: 13px; color: #86efac; font-family: var(--font-mono); min-width: 160px; }
@@ -107,7 +109,6 @@
   .stop-row.current { background: #0e3a4a; border-left: 3px solid #06b6d4; }
   .stop-row.current td:first-child { padding-left: 7px; }
   .current-badge { display: inline-block; background: #06b6d4; color: #fff; font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 700; margin-left: 4px; vertical-align: middle; }
-  .done-badge { display: inline-block; background: #16a34a; color: #fff; font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 700; margin-left: 4px; vertical-align: middle; }
 
   .status-pill { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; }
   .status-A { background: rgba(34,197,94,0.2); color: #22c55e; }
@@ -233,13 +234,11 @@ if (sessionStorage.getItem("norlo_auth") === "1") {
   document.getElementById("boardScreen").style.display = "block";
 }
 
-// TAB
+// TAB — search term persists across tabs
 function switchTab(el) {
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   el.classList.add("active");
   currentRole = el.dataset.role;
-  
-  // Update refresh button style for completed tab
   const btn = document.getElementById("refreshBtn");
   if (currentRole === "completed") {
     btn.classList.add("completed-refresh");
@@ -381,13 +380,15 @@ function renderBoard(terminals) {
     totalDrivers += filtered.length;
 
     const termClass = isCompleted ? "terminal-header completed" : "terminal-header";
-    const nameColor = isCompleted ? "#86efac" : "#c084fc";
+    const termKey = `term-${terminal.terminal.replace(/\s+/g, '-')}`;
 
     html += `<div class="terminal-block">
-      <div class="${termClass}">
+      <div class="${termClass}" onclick="toggleTerminal('${termKey}')">
         <span class="terminal-name">${terminal.terminal}</span>
         <span class="terminal-badge">${filtered.length} driver${filtered.length !== 1 ? "s" : ""}</span>
-      </div>`;
+        <span class="terminal-collapse-icon" id="icon-${termKey}">▾</span>
+      </div>
+      <div id="${termKey}">`;
 
     filtered.forEach(driver => {
       const dep = driver.departedFromYard ? fmtTime(driver.departedFromYard) : "N/A";
@@ -421,7 +422,7 @@ function renderBoard(terminals) {
         const rowClass = isCompleted ? "stop-row" : `stop-row${isCurrent ? " current" : ""}`;
         html += `<tr class="${rowClass}">
           <td>${stop.stopSeq}</td>
-          <td><span class="event-code event-${stop.eventCode}">${stop.eventCode}</span>${isCurrent && !isCompleted ? '<span class="current-badge">NOW</span>' : ""}${isCompleted ? '<span class="done-badge">✓</span>' : ""}</td>
+          <td><span class="event-code event-${stop.eventCode}">${stop.eventCode}</span>${isCurrent && !isCompleted ? '<span class="current-badge">NOW</span>' : ""}</td>
           <td title="${stop.stopCompany}">${trunc(stop.stopCompany, 26)}</td>
           <td>${stop.city}</td>
           <td>${stop.state}</td>
@@ -437,7 +438,8 @@ function renderBoard(terminals) {
 
       html += `</tbody></table></div></div>`;
     });
-    html += `</div>`;
+
+    html += `</div></div>`;
   });
 
   if (!html) {
@@ -451,7 +453,21 @@ function renderBoard(terminals) {
 }
 
 function applySearch() { if (boardData) renderBoard(boardData); }
-function toggleDriver(key) { document.getElementById(`db-${key}`)?.classList.toggle("collapsed"); }
+
+function toggleDriver(key) {
+  document.getElementById(`db-${key}`)?.classList.toggle("collapsed");
+}
+
+function toggleTerminal(key) {
+  const block = document.getElementById(key);
+  const icon = document.getElementById(`icon-${key}`);
+  if (block) {
+    const isHidden = block.style.display === 'none';
+    block.style.display = isHidden ? '' : 'none';
+    if (icon) icon.style.transform = isHidden ? '' : 'rotate(-90deg)';
+  }
+}
+
 function showLoading() {
   document.getElementById("board").innerHTML = `<div class="state-msg"><div class="spinner"></div><div class="title">Loading drivers…</div></div>`;
   document.getElementById("driverCount").textContent = "";
