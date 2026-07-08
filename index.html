@@ -105,6 +105,50 @@
   .driver-block.collapsed .collapse-icon { transform: rotate(-90deg); }
   .driver-block.collapsed .stops-wrap { display: none; }
 
+  /* HOS chip */
+  .hos-chip {
+    background: #1e1b4b; border: 1px solid #6366f1; color: #a5b4fc;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+    padding: 3px 9px; border-radius: 4px; cursor: pointer;
+    font-family: var(--font-mono); user-select: none;
+    transition: background 0.15s, color 0.15s;
+  }
+  .hos-chip:hover { background: #312e81; color: #c7d2fe; }
+  .hos-chip:active { transform: translateY(1px); }
+
+  /* HOS modal */
+  .hos-modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+    display: none; align-items: center; justify-content: center;
+    z-index: 200;
+  }
+  .hos-modal-backdrop.show { display: flex; }
+  .hos-modal {
+    background: var(--surface); border: 1px solid #6366f1; border-radius: 10px;
+    padding: 24px 28px; min-width: 320px; max-width: 90vw;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .hos-modal-title {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #a5b4fc; margin-bottom: 4px;
+  }
+  .hos-modal-email {
+    font-size: 12px; color: var(--muted); font-family: var(--font-mono);
+    margin-bottom: 18px; word-break: break-all;
+  }
+  .hos-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .hos-row:last-of-type { border-bottom: none; }
+  .hos-label { font-size: 12px; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+  .hos-value { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: #4ade80; }
+  .hos-value.err { color: var(--red); font-size: 13px; font-weight: 500; }
+  .hos-close {
+    margin-top: 18px; width: 100%; background: var(--accent); color: white;
+    border: none; padding: 9px; border-radius: 6px; font-size: 13px; font-weight: 600;
+    cursor: pointer;
+  }
+  .hos-close:hover { background: #2563eb; }
+  .hos-spinner-wrap { display: flex; align-items: center; justify-content: center; padding: 20px 0; gap: 12px; color: var(--muted); font-size: 13px; }
+
   .stops-table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--font-mono); }
   .stops-table th { background: var(--surface2); color: var(--muted); font-weight: 600; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
   .stops-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
@@ -189,6 +233,21 @@
   </div>
 </div>
 
+<!-- HOS MODAL -->
+<div class="hos-modal-backdrop" id="hosModal" onclick="if(event.target===this)closeHOS()">
+  <div class="hos-modal">
+    <div class="hos-modal-title">Hours of Service</div>
+    <div class="hos-modal-email" id="hosEmail"></div>
+    <div id="hosBody">
+      <div class="hos-spinner-wrap">
+        <div class="spinner" style="width:20px;height:20px;border-width:2px"></div>
+        <span>Fetching from Geotab…</span>
+      </div>
+    </div>
+    <button class="hos-close" onclick="closeHOS()">Close</button>
+  </div>
+</div>
+
 <script>
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxd7cv_YozmXuAO_4CQd_lQYR9qb7D9reV0frLG1_Obq9PtZE8HYUG_rXqXamcYZMa5sA/exec";
@@ -205,7 +264,7 @@ const COLUMNS = [
   "OrderCompletion","StopSeq","MovementNum",
   "DepartedFromYard","ElapsedFromYard","TripProgress",
   "IsCurrentStop","CompletedFlag","LastRefreshed",
-  "ScheduledStart","GeotabLogin"
+  "ScheduledStart","GeotabLogin","Email"
 ];
 
 let currentRole = "ltl";
@@ -280,7 +339,7 @@ async function loadData(preserveScroll = false) {
 function parseRows(rows) {
   const terminals = {};
   rows.forEach(row => {
-    while (row.length < 26) row.push("");
+    while (row.length < 30) row.push("");
     const rec = {};
     COLUMNS.forEach((col, i) => rec[col] = row[i] || "");
 
@@ -304,6 +363,7 @@ function parseRows(rows) {
         completedFlag: rec.CompletedFlag,
         scheduledStart: rec.ScheduledStart,
         geotabLogin: rec.GeotabLogin,
+        email: rec.Email,
         stops: []
       };
     }
@@ -406,6 +466,7 @@ function renderBoard(terminals) {
       const key = `${driver.driverID}-${driver.movementNum}`;
       const driverClass = isCompleted ? "driver-block completed-driver" : "driver-block";
       const progressClass = isCompleted ? "driver-progress all-done" : "driver-progress";
+      const emailAttr = (driver.email || "").replace(/'/g, "\\'");
 
       html += `<div class="${driverClass}" id="db-${key}">
         <div class="driver-header" onclick="toggleDriver('${key}')">
@@ -417,6 +478,7 @@ function renderBoard(terminals) {
             ${driver.scheduledStart ? `<span class="driver-meta-item">Sched: <span>${fmtChipTime(driver.scheduledStart)}</span></span>` : ""}
             ${driver.scheduledStart || driver.geotabLogin ? `<span class="driver-meta-item login-${classifyLogin(driver.scheduledStart, driver.geotabLogin)}">Login: <span>${driver.geotabLogin ? fmtChipTime(driver.geotabLogin) : "—"}</span></span>` : ""}
             <span class="driver-meta-item">Departed: <span>${dep}</span></span>
+            ${driver.email ? `<span class="hos-chip" onclick="event.stopPropagation(); showHOS('${emailAttr}')">HOS</span>` : ""}
           </div>
           ${driver.tripProgress ? `<span class="${progressClass}">${driver.tripProgress}</span>` : ""}
           ${isCompleted ? '<span style="font-size:11px;color:#22c55e;margin-left:4px;">✓ COMPLETE</span>' : ""}
@@ -481,6 +543,44 @@ function toggleTerminal(key) {
   }
 }
 
+// HOS MODAL
+async function showHOS(email) {
+  const modal = document.getElementById("hosModal");
+  const emailEl = document.getElementById("hosEmail");
+  const body = document.getElementById("hosBody");
+  emailEl.textContent = email;
+  body.innerHTML = `<div class="hos-spinner-wrap">
+    <div class="spinner" style="width:20px;height:20px;border-width:2px"></div>
+    <span>Fetching from Geotab…</span>
+  </div>`;
+  modal.classList.add("show");
+
+  try {
+    const url = `${APPS_SCRIPT_URL}?token=${encodeURIComponent(API_TOKEN)}&action=hos&email=${encodeURIComponent(email)}`;
+    const res = await fetch(url);
+    const json = await res.json();
+    if (json.error) {
+      body.innerHTML = `<div class="hos-row"><span class="hos-value err">${json.error}</span></div>`;
+      return;
+    }
+    body.innerHTML = `
+      <div class="hos-row">
+        <span class="hos-label">🚗 Drive Time Remaining</span>
+        <span class="hos-value">${json.driveTime || "N/A"}</span>
+      </div>
+      <div class="hos-row">
+        <span class="hos-label">🕑 Workday Remaining</span>
+        <span class="hos-value">${json.workTime || "N/A"}</span>
+      </div>`;
+  } catch (err) {
+    body.innerHTML = `<div class="hos-row"><span class="hos-value err">Fetch failed: ${err.message}</span></div>`;
+  }
+}
+
+function closeHOS() {
+  document.getElementById("hosModal").classList.remove("show");
+}
+
 function showLoading() {
   document.getElementById("board").innerHTML = `<div class="state-msg"><div class="spinner"></div><div class="title">Loading drivers…</div></div>`;
   document.getElementById("driverCount").textContent = "";
@@ -507,7 +607,6 @@ function trunc(str, len) {
   if (!str) return "—";
   return str.length > len ? str.slice(0, len) + "…" : str;
 }
-// Parse "7:00 AM", "7:25:31 AM", "4:00 PM", "13:45" → minutes since midnight, or null
 function parseClockToMin(val) {
   if (!val) return null;
   const s = String(val).trim();
@@ -520,10 +619,6 @@ function parseClockToMin(val) {
   if (ampm === "AM" && h === 12) h = 0;
   return h * 60 + mm;
 }
-// Compare Login vs Scheduled Start → 'muted' | 'ontime' | 'late'
-// muted   = login blank, unparseable, or appears stale (>2h before sched → probably yesterday's session)
-// ontime  = login ≤ sched + 5 min grace
-// late    = login > sched + 5 min
 function classifyLogin(sched, login) {
   const s = parseClockToMin(sched);
   const l = parseClockToMin(login);
@@ -533,7 +628,6 @@ function classifyLogin(sched, login) {
   if (diff <= 5) return "ontime";
   return "late";
 }
-// Trim "7:25:31 AM" → "7:25 AM" for chip display
 function fmtChipTime(val) {
   if (!val) return "";
   return String(val).replace(/^(\d{1,2}:\d{2})(:\d{2})?(\s*[AP]M)?$/i, "$1$3").trim();
