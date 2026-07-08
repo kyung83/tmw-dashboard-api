@@ -124,6 +124,17 @@
   .hos-chip:hover { background: #312e81; color: #c7d2fe; }
   .hos-chip:active { transform: translateY(1px); }
 
+  /* LOCATE chip — mirrors HOS chip shape, purple palette to distinguish */
+  .locate-chip {
+    background: #2e1065; border: 1px solid #a855f7; color: #d8b4fe;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+    padding: 3px 9px; border-radius: 4px; cursor: pointer;
+    font-family: var(--font-mono); user-select: none;
+    transition: background 0.15s, color 0.15s;
+  }
+  .locate-chip:hover { background: #4c1d95; color: #e9d5ff; }
+  .locate-chip:active { transform: translateY(1px); }
+
   /* HOS modal */
   .hos-modal-backdrop {
     position: fixed; inset: 0; background: rgba(0,0,0,0.65);
@@ -156,6 +167,54 @@
   }
   .hos-close:hover { background: #2563eb; }
   .hos-spinner-wrap { display: flex; align-items: center; justify-content: center; padding: 20px 0; gap: 12px; color: var(--muted); font-size: 13px; }
+
+  /* LOCATE modal — mirrors HOS modal shape, purple palette */
+  .locate-modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+    display: none; align-items: center; justify-content: center;
+    z-index: 200;
+  }
+  .locate-modal-backdrop.show { display: flex; }
+  .locate-modal {
+    background: var(--surface); border: 1px solid #a855f7; border-radius: 10px;
+    padding: 24px 28px; min-width: 360px; max-width: 90vw;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .locate-modal-title {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #d8b4fe; margin-bottom: 4px;
+  }
+  .locate-modal-truck {
+    font-size: 22px; font-weight: 700; color: #e9d5ff;
+    font-family: var(--font-mono); margin-bottom: 4px;
+  }
+  .locate-modal-email {
+    font-size: 12px; color: var(--muted); font-family: var(--font-mono);
+    margin-bottom: 18px; word-break: break-all;
+  }
+  .locate-row { padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .locate-row:last-of-type { border-bottom: none; }
+  .locate-label { font-size: 11px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
+  .locate-value { font-family: var(--font-mono); font-size: 14px; color: var(--text); line-height: 1.4; }
+  .locate-status-moving { color: #4ade80; font-weight: 700; }
+  .locate-status-stopped { color: #fbbf24; font-weight: 700; }
+  .locate-age-fresh { color: #4ade80; }
+  .locate-age-stale { color: #f59e0b; }
+  .locate-age-old { color: #f87171; }
+  .locate-actions { display: flex; gap: 8px; margin-top: 18px; }
+  .locate-open-geotab {
+    flex: 1; background: #a855f7; color: white; border: none;
+    padding: 9px; border-radius: 6px; font-size: 13px; font-weight: 600;
+    cursor: pointer; text-decoration: none; text-align: center;
+    display: inline-block; transition: background 0.15s;
+  }
+  .locate-open-geotab:hover { background: #9333ea; }
+  .locate-close {
+    background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+    padding: 9px 18px; border-radius: 6px; font-size: 13px; font-weight: 600;
+    cursor: pointer;
+  }
+  .locate-close:hover { background: var(--border); }
 
   .stops-table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--font-mono); }
   .stops-table th { background: var(--surface2); color: var(--muted); font-weight: 600; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
@@ -254,6 +313,25 @@
       </div>
     </div>
     <button class="hos-close" onclick="closeHOS()">Close</button>
+  </div>
+</div>
+
+<!-- LOCATE MODAL -->
+<div class="locate-modal-backdrop" id="locateModal" onclick="if(event.target===this)closeLocate()">
+  <div class="locate-modal">
+    <div class="locate-modal-title">Driver Location</div>
+    <div class="locate-modal-truck" id="locateTruck">—</div>
+    <div class="locate-modal-email" id="locateEmail"></div>
+    <div id="locateBody">
+      <div class="hos-spinner-wrap">
+        <div class="spinner" style="width:20px;height:20px;border-width:2px"></div>
+        <span>Locating in Geotab…</span>
+      </div>
+    </div>
+    <div class="locate-actions" id="locateActions" style="display:none">
+      <a class="locate-open-geotab" id="locateGeotabLink" href="#" target="_blank" rel="noopener">Open in Geotab ↗</a>
+      <button class="locate-close" onclick="closeLocate()">Close</button>
+    </div>
   </div>
 </div>
 
@@ -494,6 +572,7 @@ function renderBoard(terminals) {
             ${driver.scheduledStart || driver.geotabLogin ? `<span class="driver-meta-item login-${classifyLogin(driver.scheduledStart, driver.geotabLogin)}">Login: <span>${driver.geotabLogin ? fmtChipTime(driver.geotabLogin) : "—"}</span></span>` : ""}
             <span class="driver-meta-item">Departed: <span>${dep}</span></span>
             ${driver.email ? `<span class="hos-chip" onclick="event.stopPropagation(); showHOS('${emailAttr}')">HOS</span>` : ""}
+            ${driver.email ? `<span class="locate-chip" onclick="event.stopPropagation(); showLocate('${emailAttr}')">🚛 LOCATE</span>` : ""}
           </div>
           ${driver.tripProgress ? `<span class="${progressClass}">${driver.tripProgress}</span>` : ""}
           ${isCompleted ? '<span style="font-size:11px;color:#22c55e;margin-left:4px;">✓ COMPLETE</span>' : ""}
@@ -619,6 +698,93 @@ async function showHOS(email) {
 
 function closeHOS() {
   document.getElementById("hosModal").classList.remove("show");
+}
+
+// LOCATE MODAL
+async function showLocate(email) {
+  const modal = document.getElementById("locateModal");
+  const truckEl = document.getElementById("locateTruck");
+  const emailEl = document.getElementById("locateEmail");
+  const body = document.getElementById("locateBody");
+  const actions = document.getElementById("locateActions");
+  truckEl.textContent = "—";
+  emailEl.textContent = email;
+  actions.style.display = "none";
+  body.innerHTML = `<div class="hos-spinner-wrap">
+    <div class="spinner" style="width:20px;height:20px;border-width:2px"></div>
+    <span>Locating in Geotab…</span>
+  </div>`;
+  modal.classList.add("show");
+
+  try {
+    const url = `${APPS_SCRIPT_URL}?token=${encodeURIComponent(API_TOKEN)}&action=locate&email=${encodeURIComponent(email)}`;
+    const res = await fetch(url);
+    const json = await res.json();
+
+    if (json.error) {
+      body.innerHTML = `<div class="locate-row">
+        <div class="locate-label">Not available</div>
+        <div class="locate-value" style="color: var(--muted); font-size: 13px;">${json.error}</div>
+      </div>`;
+      actions.style.display = "flex";
+      document.getElementById("locateGeotabLink").style.display = "none";
+      return;
+    }
+
+    truckEl.textContent = `🚛 ${json.deviceName || json.deviceId}`;
+    const statusClass = json.isDriving ? "locate-status-moving" : "locate-status-stopped";
+    const statusText = json.isDriving
+      ? `Moving · ${Math.round(json.speed || 0)} mph`
+      : "Stopped";
+    const ageText = fmtAge(json.ageSeconds);
+    const ageClass = classifyAge(json.ageSeconds);
+
+    body.innerHTML = `
+      <div class="locate-row">
+        <div class="locate-label">📍 Location</div>
+        <div class="locate-value">${json.address || (json.lat + ", " + json.lng)}</div>
+      </div>
+      <div class="locate-row">
+        <div class="locate-label">Status</div>
+        <div class="locate-value ${statusClass}">${statusText}</div>
+      </div>
+      <div class="locate-row">
+        <div class="locate-label">Last update</div>
+        <div class="locate-value ${ageClass}">${ageText}</div>
+      </div>`;
+
+    const link = document.getElementById("locateGeotabLink");
+    link.href = json.geotabUrl;
+    link.style.display = "";
+    actions.style.display = "flex";
+  } catch (err) {
+    body.innerHTML = `<div class="locate-row">
+      <div class="locate-label">Error</div>
+      <div class="locate-value err" style="color: var(--red); font-size: 13px;">Fetch failed: ${err.message}</div>
+    </div>`;
+    actions.style.display = "flex";
+    document.getElementById("locateGeotabLink").style.display = "none";
+  }
+}
+
+function closeLocate() {
+  document.getElementById("locateModal").classList.remove("show");
+}
+
+function fmtAge(seconds) {
+  if (seconds == null || isNaN(seconds)) return "unknown";
+  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  return `${h}h ${m}m ago`;
+}
+
+function classifyAge(seconds) {
+  if (seconds == null || isNaN(seconds)) return "";
+  if (seconds < 300) return "locate-age-fresh";       // < 5 min
+  if (seconds < 1800) return "locate-age-stale";      // < 30 min
+  return "locate-age-old";                            // 30+ min
 }
 
 function showLoading() {
