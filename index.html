@@ -238,7 +238,7 @@ function switchTab(el) {
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   el.classList.add("active");
   currentRole = el.dataset.role;
-  document.getElementById("searchInput").value = "";
+  
   // Update refresh button style for completed tab
   const btn = document.getElementById("refreshBtn");
   if (currentRole === "completed") {
