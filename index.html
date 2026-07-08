@@ -22,99 +22,20 @@
   body { background: var(--bg); color: var(--text); font-family: var(--font-ui); min-height: 100vh; }
 
   /* LOGIN */
-  #loginScreen {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .login-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 40px;
-    width: 100%;
-    max-width: 380px;
-  }
-  .login-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 700;
-    font-size: 16px;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    margin-bottom: 32px;
-    justify-content: center;
-  }
-  .login-dot {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    background: var(--green);
-    box-shadow: 0 0 8px var(--green);
-  }
-  .login-label {
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 6px;
-    margin-top: 16px;
-  }
-  .login-input {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 10px 14px;
-    border-radius: 6px;
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
+  #loginScreen { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 40px; width: 100%; max-width: 380px; }
+  .login-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 32px; justify-content: center; }
+  .login-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .login-label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; margin-top: 16px; }
+  .login-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 6px; font-size: 14px; outline: none; transition: border-color 0.15s; }
   .login-input:focus { border-color: var(--accent); }
-  .login-error {
-    background: rgba(239,68,68,0.1);
-    border: 1px solid rgba(239,68,68,0.3);
-    color: var(--red);
-    padding: 10px 14px;
-    border-radius: 6px;
-    font-size: 13px;
-    margin-top: 16px;
-    display: none;
-  }
-  .login-btn {
-    width: 100%;
-    background: var(--accent);
-    color: white;
-    border: none;
-    padding: 11px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 24px;
-    transition: background 0.15s;
-  }
+  .login-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--red); padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-top: 16px; display: none; }
+  .login-btn { width: 100%; background: var(--accent); color: white; border: none; padding: 11px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 24px; transition: background 0.15s; }
   .login-btn:hover { background: #2563eb; }
 
   /* BOARD */
   #boardScreen { display: none; }
-
-  header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 0 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 56px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; }
   .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; letter-spacing: 0.05em; text-transform: uppercase; }
   .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
@@ -149,7 +70,6 @@
   .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
 
   .board { padding: 20px 24px; }
-
   .terminal-block { margin-bottom: 20px; }
   .terminal-header { background: #1a0a2e; border: 1px solid #7c3aed; border-radius: 8px 8px 0 0; padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
   .terminal-name { font-weight: 700; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #c084fc; }
@@ -197,7 +117,7 @@
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
+<!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-card">
     <div class="login-logo"><div class="login-dot"></div>Norlo Driver Board</div>
@@ -210,7 +130,7 @@
   </div>
 </div>
 
-<!-- BOARD SCREEN -->
+<!-- BOARD -->
 <div id="boardScreen">
   <header>
     <div class="logo"><div class="logo-dot"></div>Norlo Driver Board</div>
@@ -251,11 +171,21 @@
 
 <script>
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
-const API_BASE = "http://172.23.175.133:8080";
-const API_KEY  = "B1sFLUS/g8z8V9TYmade2Mw4q2Jj0NqyxFuX+XN85FM=";
-const APP_USER = "NorloOPS";
-const APP_PASS = "DIspatch#1";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxd7cv_YozmXuAO_4CQd_lQYR9qb7D9reV0frLG1_Obq9PtZE8HYUG_rXqXamcYZMa5sA/exec";
+const API_TOKEN = "NorloBoard2026!";
+const APP_USER  = "NorloOPS";
+const APP_PASS  = "DIspatch#1";
 // ─────────────────────────────────────────────────────────────────────────────
+
+const COLUMNS = [
+  "RoleBucket","EquipClass","TerminalName","TerminalOrder",
+  "DriverID","DriverName","OrderNumber","EventCode",
+  "StopCompany","City","State","Arrival","Departure",
+  "Est","Dep","OrderStatus","OrderPieces","Weight",
+  "OrderCompletion","StopSeq","MovementNum",
+  "DepartedFromYard","ElapsedFromYard","TripProgress",
+  "IsCurrentStop","LastRefreshed"
+];
 
 let currentRole = "ltl";
 let boardData = null;
@@ -285,13 +215,11 @@ function signOut() {
   document.getElementById("loginError").style.display = "none";
 }
 
-// Check if already logged in this session
 if (sessionStorage.getItem("norlo_auth") === "1") {
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("boardScreen").style.display = "block";
 }
 
-// TAB
 function switchTab(el) {
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   el.classList.add("active");
@@ -300,24 +228,73 @@ function switchTab(el) {
   loadData();
 }
 
-// LOAD DATA
 async function loadData() {
   showLoading();
   try {
-    const res = await fetch(`${API_BASE}/api/${currentRole}`, {
-      headers: { "X-API-Key": API_KEY }
-    });
+    const url = `${APPS_SCRIPT_URL}?token=${encodeURIComponent(API_TOKEN)}&action=read&role=${currentRole}`;
+    const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    boardData = await res.json();
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+    boardData = parseRows(json.rows || []);
     renderBoard(boardData);
-    document.getElementById("lastUpdated").textContent = `Updated ${boardData.lastUpdated}`;
+    document.getElementById("lastUpdated").textContent = `Updated ${new Date().toLocaleTimeString()}`;
     scheduleAutoRefresh();
   } catch (err) {
     showError(err.message);
   }
 }
 
-// TRIGGER REFRESH
+function parseRows(rows) {
+  const terminals = {};
+  rows.forEach(row => {
+    while (row.length < 26) row.push("");
+    const rec = {};
+    COLUMNS.forEach((col, i) => rec[col] = row[i] || "");
+
+    const terminal = rec.TerminalName || "UNKNOWN";
+    const terminalOrder = rec.TerminalOrder || "99";
+    const driverID = rec.DriverID;
+    const driverName = rec.DriverName;
+    const movement = rec.MovementNum;
+    const driverKey = `${driverID}|${movement}`;
+
+    if (!terminals[terminal]) {
+      terminals[terminal] = { terminal, terminalOrder, drivers: {} };
+    }
+    if (!terminals[terminal].drivers[driverKey]) {
+      terminals[terminal].drivers[driverKey] = {
+        driverID, driverName, movementNum: movement,
+        tripProgress: rec.TripProgress,
+        departedFromYard: rec.DepartedFromYard,
+        elapsedFromYard: rec.ElapsedFromYard,
+        equipClass: rec.EquipClass,
+        stops: []
+      };
+    }
+    terminals[terminal].drivers[driverKey].stops.push({
+      orderNumber: rec.OrderNumber,
+      eventCode: (rec.EventCode || "").trim(),
+      stopCompany: rec.StopCompany,
+      city: rec.City,
+      state: rec.State,
+      arrival: rec.Arrival,
+      departure: rec.Departure,
+      est: rec.Est,
+      dep: rec.Dep,
+      orderStatus: rec.OrderStatus,
+      orderPieces: rec.OrderPieces,
+      weight: rec.Weight,
+      stopSeq: rec.StopSeq,
+      isCurrentStop: rec.IsCurrentStop,
+    });
+  });
+
+  return Object.values(terminals)
+    .sort((a, b) => String(a.terminalOrder).localeCompare(String(b.terminalOrder)))
+    .map(t => ({ ...t, drivers: Object.values(t.drivers) }));
+}
+
 async function triggerRefresh() {
   const btn = document.getElementById("refreshBtn");
   const status = document.getElementById("refreshStatus");
@@ -326,10 +303,8 @@ async function triggerRefresh() {
   status.style.display = "inline";
 
   try {
-    await fetch(`${API_BASE}/api/refresh/${currentRole}`, {
-      method: "POST",
-      headers: { "X-API-Key": API_KEY }
-    });
+    const url = `${APPS_SCRIPT_URL}?token=${encodeURIComponent(API_TOKEN)}&action=refresh&role=${currentRole}`;
+    await fetch(url);
     clearTimeout(refreshPollTimer);
     refreshPollTimer = setTimeout(async () => {
       await loadData();
@@ -350,14 +325,12 @@ function scheduleAutoRefresh() {
   autoRefreshTimer = setTimeout(loadData, 60000);
 }
 
-// RENDER
-function renderBoard(data) {
+function renderBoard(terminals) {
   const board = document.getElementById("board");
   const search = document.getElementById("searchInput").value.toLowerCase();
-  const terminals = data.terminals || [];
 
-  if (terminals.length === 0) {
-    board.innerHTML = `<div class="state-msg"><div class="icon">🚛</div><div class="title">No drivers dispatched</div><div class="sub">No active drivers found for this role.</div></div>`;
+  if (!terminals || terminals.length === 0) {
+    board.innerHTML = `<div class="state-msg"><div class="icon">🚛</div><div class="title">No drivers dispatched</div><div class="sub">Click Refresh Board to pull current data.</div></div>`;
     document.getElementById("driverCount").textContent = "";
     return;
   }
@@ -366,14 +339,13 @@ function renderBoard(data) {
   let html = "";
 
   terminals.forEach(terminal => {
-    const drivers = terminal.drivers || [];
     const filtered = search
-      ? drivers.filter(d =>
+      ? terminal.drivers.filter(d =>
           d.driverName.toLowerCase().includes(search) ||
           d.driverID.toLowerCase().includes(search) ||
           d.stops.some(s => (s.stopCompany||"").toLowerCase().includes(search) || (s.city||"").toLowerCase().includes(search))
         )
-      : drivers;
+      : terminal.drivers;
 
     if (filtered.length === 0) return;
     totalDrivers += filtered.length;
@@ -386,7 +358,6 @@ function renderBoard(data) {
 
     filtered.forEach(driver => {
       const dep = driver.departedFromYard ? fmtTime(driver.departedFromYard) : "N/A";
-      const elapsed = driver.elapsedFromYard || "N/A";
       const key = `${driver.driverID}-${driver.movementNum}`;
 
       html += `<div class="driver-block" id="db-${key}">
@@ -395,7 +366,7 @@ function renderBoard(data) {
           <div class="driver-meta">
             <span class="driver-meta-item">ID: <span>${driver.driverID}</span></span>
             <span class="driver-meta-item">Departed: <span>${dep}</span></span>
-            <span class="driver-meta-item">Elapsed: <span>${elapsed}</span></span>
+            <span class="driver-meta-item">Elapsed: <span>${driver.elapsedFromYard||"N/A"}</span></span>
             ${driver.equipClass ? `<span class="driver-meta-item">Equip: <span>${driver.equipClass}</span></span>` : ""}
           </div>
           ${driver.tripProgress ? `<span class="driver-progress">${driver.tripProgress}</span>` : ""}
@@ -444,19 +415,18 @@ function renderBoard(data) {
 
 function applySearch() { if (boardData) renderBoard(boardData); }
 function toggleDriver(key) { document.getElementById(`db-${key}`)?.classList.toggle("collapsed"); }
-
 function showLoading() {
   document.getElementById("board").innerHTML = `<div class="state-msg"><div class="spinner"></div><div class="title">Loading drivers…</div></div>`;
   document.getElementById("driverCount").textContent = "";
 }
 function showError(msg) {
-  document.getElementById("board").innerHTML = `<div class="state-msg"><div class="icon">⚠</div><div class="title">Could not load data</div><div class="sub">${msg}</div><div class="sub" style="margin-top:8px;font-size:11px;color:#6b7494">Make sure you are on the Norlo network</div></div>`;
+  document.getElementById("board").innerHTML = `<div class="state-msg"><div class="icon">⚠</div><div class="title">Could not load data</div><div class="sub">${msg}</div></div>`;
   document.getElementById("driverCount").textContent = "";
 }
 function fmtDT(val) {
   if (!val) return "—";
   const s = String(val);
-  if (s.includes("2049")) return "—";
+  if (s.includes("2049") || s === "") return "—";
   const m = s.match(/(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/);
   if (!m) return s.slice(0,16);
   const today = new Date().toISOString().slice(0,10);
@@ -465,12 +435,15 @@ function fmtDT(val) {
 function fmtTime(val) {
   if (!val) return "N/A";
   const m = String(val).match(/(\d{2}:\d{2})/);
-  return m ? m[1] : val;
+  return m ? m[1] : String(val).slice(0,5);
 }
 function trunc(str, len) {
   if (!str) return "—";
   return str.length > len ? str.slice(0, len) + "…" : str;
 }
+
+// Auto-load if already logged in
+if (sessionStorage.getItem("norlo_auth") === "1") loadData();
 </script>
 </body>
 </html>
