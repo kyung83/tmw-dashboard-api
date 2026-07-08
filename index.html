@@ -97,6 +97,9 @@
   .driver-meta-item { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
   .driver-meta-item span { color: var(--text); font-weight: 600; }
   .driver-progress { background: #052e16; border: 1px solid #16a34a; color: #86efac; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-family: var(--font-mono); font-weight: 700; }
+  .driver-meta-item.login-ontime span { color: #4ade80; font-weight: 700; }
+  .driver-meta-item.login-late span   { color: #f87171; font-weight: 700; }
+  .driver-meta-item.login-muted span  { color: var(--muted); }
   .driver-progress.all-done { background: #14532d; border-color: #22c55e; color: #4ade80; }
   .collapse-icon { margin-left: auto; color: var(--muted); font-size: 12px; transition: transform 0.2s; }
   .driver-block.collapsed .collapse-icon { transform: rotate(-90deg); }
@@ -201,7 +204,8 @@ const COLUMNS = [
   "Est","Dep","OrderStatus","OrderPieces","Weight",
   "OrderCompletion","StopSeq","MovementNum",
   "DepartedFromYard","ElapsedFromYard","TripProgress",
-  "IsCurrentStop","CompletedFlag"
+  "IsCurrentStop","CompletedFlag","LastRefreshed",
+  "ScheduledStart","GeotabLogin"
 ];
 
 let currentRole = "ltl";
@@ -298,6 +302,8 @@ function parseRows(rows) {
         elapsedFromYard: rec.ElapsedFromYard,
         equipClass: rec.EquipClass,
         completedFlag: rec.CompletedFlag,
+        scheduledStart: rec.ScheduledStart,
+        geotabLogin: rec.GeotabLogin,
         stops: []
       };
     }
@@ -409,6 +415,8 @@ function renderBoard(terminals) {
             <span class="driver-meta-item">Departed: <span>${dep}</span></span>
             <span class="driver-meta-item">Elapsed: <span>${driver.elapsedFromYard||"N/A"}</span></span>
             ${driver.equipClass ? `<span class="driver-meta-item">Equip: <span>${driver.equipClass}</span></span>` : ""}
+            ${driver.scheduledStart ? `<span class="driver-meta-item">Sched: <span>${fmtChipTime(driver.scheduledStart)}</span></span>` : ""}
+            ${driver.scheduledStart || driver.geotabLogin ? `<span class="driver-meta-item login-${classifyLogin(driver.scheduledStart, driver.geotabLogin)}">Login: <span>${driver.geotabLogin ? fmtChipTime(driver.geotabLogin) : "—"}</span></span>` : ""}
           </div>
           ${driver.tripProgress ? `<span class="${progressClass}">${driver.tripProgress}</span>` : ""}
           ${isCompleted ? '<span style="font-size:11px;color:#22c55e;margin-left:4px;">✓ COMPLETE</span>' : ""}
@@ -498,6 +506,37 @@ function fmtTime(val) {
 function trunc(str, len) {
   if (!str) return "—";
   return str.length > len ? str.slice(0, len) + "…" : str;
+}
+// Parse "7:00 AM", "7:25:31 AM", "4:00 PM", "13:45" → minutes since midnight, or null
+function parseClockToMin(val) {
+  if (!val) return null;
+  const s = String(val).trim();
+  const m = s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+  if (!m) return null;
+  let h = parseInt(m[1], 10);
+  const mm = parseInt(m[2], 10);
+  const ampm = (m[4] || "").toUpperCase();
+  if (ampm === "PM" && h < 12) h += 12;
+  if (ampm === "AM" && h === 12) h = 0;
+  return h * 60 + mm;
+}
+// Compare Login vs Scheduled Start → 'muted' | 'ontime' | 'late'
+// muted   = login blank, unparseable, or appears stale (>2h before sched → probably yesterday's session)
+// ontime  = login ≤ sched + 5 min grace
+// late    = login > sched + 5 min
+function classifyLogin(sched, login) {
+  const s = parseClockToMin(sched);
+  const l = parseClockToMin(login);
+  if (s == null || l == null) return "muted";
+  const diff = l - s;
+  if (diff < -120) return "muted";
+  if (diff <= 5) return "ontime";
+  return "late";
+}
+// Trim "7:25:31 AM" → "7:25 AM" for chip display
+function fmtChipTime(val) {
+  if (!val) return "";
+  return String(val).replace(/^(\d{1,2}:\d{2})(:\d{2})?(\s*[AP]M)?$/i, "$1$3").trim();
 }
 
 if (sessionStorage.getItem("norlo_auth") === "1") loadData();
