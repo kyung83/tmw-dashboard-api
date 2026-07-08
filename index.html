@@ -39,7 +39,6 @@
   .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; letter-spacing: 0.05em; text-transform: uppercase; }
   .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  .header-left { display: flex; align-items: center; gap: 16px; }
   .header-right { display: flex; align-items: center; gap: 16px; }
   .last-updated { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
   .signout-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
@@ -49,6 +48,8 @@
   .tab { padding: 10px 20px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; user-select: none; }
   .tab:hover { color: var(--text); }
   .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab.completed-tab { color: var(--muted); }
+  .tab.completed-tab.active { color: #22c55e; border-bottom-color: #22c55e; }
 
   .controls { padding: 12px 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); background: var(--surface); flex-wrap: wrap; }
   .search-wrap { position: relative; flex: 1; max-width: 320px; }
@@ -61,6 +62,8 @@
   .refresh-btn { background: var(--accent); color: white; border: none; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; display: flex; align-items: center; gap: 6px; }
   .refresh-btn:hover { background: #2563eb; }
   .refresh-btn:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; }
+  .refresh-btn.completed-refresh { background: #16a34a; }
+  .refresh-btn.completed-refresh:hover { background: #15803d; }
   .spinner-sm { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
   .refresh-btn.loading .spinner-sm { display: inline-block; }
   .refresh-btn.loading .btn-text { display: none; }
@@ -73,11 +76,17 @@
   .board { padding: 20px 24px; }
   .terminal-block { margin-bottom: 20px; }
   .terminal-header { background: #1a0a2e; border: 1px solid #7c3aed; border-radius: 8px 8px 0 0; padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
+  .terminal-header.completed { background: #052e16; border-color: #16a34a; }
   .terminal-name { font-weight: 700; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #c084fc; }
+  .terminal-header.completed .terminal-name { color: #86efac; }
   .terminal-badge { background: #3b0764; color: #c084fc; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-family: var(--font-mono); }
+  .terminal-header.completed .terminal-badge { background: #14532d; color: #86efac; }
 
   .driver-block { border-left: 1px solid #7c3aed; border-right: 1px solid #7c3aed; border-bottom: 1px solid var(--border); }
   .driver-block:last-child { border-bottom: 1px solid #7c3aed; border-radius: 0 0 8px 8px; }
+  .driver-block.completed-driver { border-left-color: #16a34a; border-right-color: #16a34a; }
+  .driver-block.completed-driver:last-child { border-bottom-color: #16a34a; }
+
   .driver-header { background: #0a1f0a; border-top: 1px solid #16a34a; padding: 8px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; cursor: pointer; user-select: none; }
   .driver-header:hover { background: #0d2a0d; }
   .driver-name { font-weight: 700; font-size: 13px; color: #86efac; font-family: var(--font-mono); min-width: 160px; }
@@ -85,6 +94,7 @@
   .driver-meta-item { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
   .driver-meta-item span { color: var(--text); font-weight: 600; }
   .driver-progress { background: #052e16; border: 1px solid #16a34a; color: #86efac; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-family: var(--font-mono); font-weight: 700; }
+  .driver-progress.all-done { background: #14532d; border-color: #22c55e; color: #4ade80; }
   .collapse-icon { margin-left: auto; color: var(--muted); font-size: 12px; transition: transform 0.2s; }
   .driver-block.collapsed .collapse-icon { transform: rotate(-90deg); }
   .driver-block.collapsed .stops-wrap { display: none; }
@@ -97,6 +107,7 @@
   .stop-row.current { background: #0e3a4a; border-left: 3px solid #06b6d4; }
   .stop-row.current td:first-child { padding-left: 7px; }
   .current-badge { display: inline-block; background: #06b6d4; color: #fff; font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 700; margin-left: 4px; vertical-align: middle; }
+  .done-badge { display: inline-block; background: #16a34a; color: #fff; font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 700; margin-left: 4px; vertical-align: middle; }
 
   .status-pill { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; }
   .status-A { background: rgba(34,197,94,0.2); color: #22c55e; }
@@ -134,14 +145,7 @@
 <!-- BOARD -->
 <div id="boardScreen">
   <header>
-    <div class="header-left">
-      <div class="logo"><div class="logo-dot"></div>Norlo Driver Board</div>
-      <button class="refresh-btn" id="refreshBtn" onclick="triggerRefresh()">
-        <div class="spinner-sm"></div>
-        <span class="btn-text">↻ Refresh Board</span>
-      </button>
-      <span class="refresh-status" id="refreshStatus" style="display:none">Pulling data… up to 30s</span>
-    </div>
+    <div class="logo"><div class="logo-dot"></div>Norlo Driver Board</div>
     <div class="header-right">
       <span class="last-updated" id="lastUpdated">—</span>
       <button class="signout-btn" onclick="signOut()">Sign out</button>
@@ -152,6 +156,7 @@
     <div class="tab active" data-role="ltl" onclick="switchTab(this)">LTL — Local</div>
     <div class="tab" data-role="flatbed" onclick="switchTab(this)">Flatbed</div>
     <div class="tab" data-role="otr" onclick="switchTab(this)">OTR</div>
+    <div class="tab completed-tab" data-role="completed" onclick="switchTab(this)">✓ Completed</div>
   </div>
 
   <div class="controls">
@@ -160,6 +165,11 @@
       <input class="search-input" type="text" id="searchInput" placeholder="Search driver, company, city…" oninput="applySearch()">
     </div>
     <span class="driver-count" id="driverCount"></span>
+    <button class="refresh-btn" id="refreshBtn" onclick="triggerRefresh()">
+      <div class="spinner-sm"></div>
+      <span class="btn-text">↻ Refresh Board</span>
+    </button>
+    <span class="refresh-status" id="refreshStatus" style="display:none">Pulling data… up to 30s</span>
     <div class="legend">
       <div class="legend-item"><div class="legend-dot" style="background:#0e3a4a;border:1px solid #06b6d4"></div>Current stop</div>
       <div class="legend-item"><div class="legend-dot" style="background:rgba(34,197,94,0.2);border:1px solid #22c55e"></div>Actual (A)</div>
@@ -187,14 +197,13 @@ const COLUMNS = [
   "Est","Dep","OrderStatus","OrderPieces","Weight",
   "OrderCompletion","StopSeq","MovementNum",
   "DepartedFromYard","ElapsedFromYard","TripProgress",
-  "IsCurrentStop","LastRefreshed"
+  "IsCurrentStop","CompletedFlag"
 ];
 
 let currentRole = "ltl";
 let boardData = null;
 let refreshPollTimer = null;
 let autoRefreshTimer = null;
-let collapsedDrivers = new Set();
 
 // AUTH
 function doLogin() {
@@ -224,18 +233,27 @@ if (sessionStorage.getItem("norlo_auth") === "1") {
   document.getElementById("boardScreen").style.display = "block";
 }
 
+// TAB
 function switchTab(el) {
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   el.classList.add("active");
   currentRole = el.dataset.role;
   document.getElementById("searchInput").value = "";
-  collapsedDrivers.clear();
+  // Update refresh button style for completed tab
+  const btn = document.getElementById("refreshBtn");
+  if (currentRole === "completed") {
+    btn.classList.add("completed-refresh");
+    btn.querySelector(".btn-text").textContent = "↻ Refresh Completed";
+  } else {
+    btn.classList.remove("completed-refresh");
+    btn.querySelector(".btn-text").textContent = "↻ Refresh Board";
+  }
   loadData();
 }
 
-async function loadData(preserveScroll = false) {
-  const savedScroll = preserveScroll ? window.scrollY : 0;
-  if (!preserveScroll) showLoading();
+// LOAD DATA
+async function loadData() {
+  showLoading();
   try {
     const url = `${APPS_SCRIPT_URL}?token=${encodeURIComponent(API_TOKEN)}&action=read&role=${currentRole}`;
     const res = await fetch(url);
@@ -245,7 +263,6 @@ async function loadData(preserveScroll = false) {
     boardData = parseRows(json.rows || []);
     renderBoard(boardData);
     document.getElementById("lastUpdated").textContent = `Updated ${new Date().toLocaleTimeString()}`;
-    if (preserveScroll) requestAnimationFrame(() => window.scrollTo(0, savedScroll));
     scheduleAutoRefresh();
   } catch (err) {
     showError(err.message);
@@ -276,6 +293,7 @@ function parseRows(rows) {
         departedFromYard: rec.DepartedFromYard,
         elapsedFromYard: rec.ElapsedFromYard,
         equipClass: rec.EquipClass,
+        completedFlag: rec.CompletedFlag,
         stops: []
       };
     }
@@ -314,7 +332,7 @@ async function triggerRefresh() {
     await fetch(url);
     clearTimeout(refreshPollTimer);
     refreshPollTimer = setTimeout(async () => {
-      await loadData(true);
+      await loadData();
       btn.classList.remove("loading");
       btn.disabled = false;
       status.style.display = "none";
@@ -329,15 +347,20 @@ async function triggerRefresh() {
 
 function scheduleAutoRefresh() {
   clearTimeout(autoRefreshTimer);
-  autoRefreshTimer = setTimeout(() => loadData(true), 60000);
+  autoRefreshTimer = setTimeout(loadData, 60000);
 }
 
 function renderBoard(terminals) {
   const board = document.getElementById("board");
   const search = document.getElementById("searchInput").value.toLowerCase();
+  const isCompleted = currentRole === "completed";
 
   if (!terminals || terminals.length === 0) {
-    board.innerHTML = `<div class="state-msg"><div class="icon">🚛</div><div class="title">No drivers dispatched</div><div class="sub">Click Refresh Board to pull current data.</div></div>`;
+    board.innerHTML = `<div class="state-msg">
+      <div class="icon">${isCompleted ? "✅" : "🚛"}</div>
+      <div class="title">${isCompleted ? "No completed trips yet" : "No drivers dispatched"}</div>
+      <div class="sub">Click Refresh ${isCompleted ? "Completed" : "Board"} to pull current data.</div>
+    </div>`;
     document.getElementById("driverCount").textContent = "";
     return;
   }
@@ -357,8 +380,11 @@ function renderBoard(terminals) {
     if (filtered.length === 0) return;
     totalDrivers += filtered.length;
 
+    const termClass = isCompleted ? "terminal-header completed" : "terminal-header";
+    const nameColor = isCompleted ? "#86efac" : "#c084fc";
+
     html += `<div class="terminal-block">
-      <div class="terminal-header">
+      <div class="${termClass}">
         <span class="terminal-name">${terminal.terminal}</span>
         <span class="terminal-badge">${filtered.length} driver${filtered.length !== 1 ? "s" : ""}</span>
       </div>`;
@@ -366,9 +392,10 @@ function renderBoard(terminals) {
     filtered.forEach(driver => {
       const dep = driver.departedFromYard ? fmtTime(driver.departedFromYard) : "N/A";
       const key = `${driver.driverID}-${driver.movementNum}`;
-      const collapsedClass = collapsedDrivers.has(key) ? " collapsed" : "";
+      const driverClass = isCompleted ? "driver-block completed-driver" : "driver-block";
+      const progressClass = isCompleted ? "driver-progress all-done" : "driver-progress";
 
-      html += `<div class="driver-block${collapsedClass}" id="db-${key}">
+      html += `<div class="${driverClass}" id="db-${key}">
         <div class="driver-header" onclick="toggleDriver('${key}')">
           <span class="driver-name">${driver.driverName}</span>
           <div class="driver-meta">
@@ -377,7 +404,8 @@ function renderBoard(terminals) {
             <span class="driver-meta-item">Elapsed: <span>${driver.elapsedFromYard||"N/A"}</span></span>
             ${driver.equipClass ? `<span class="driver-meta-item">Equip: <span>${driver.equipClass}</span></span>` : ""}
           </div>
-          ${driver.tripProgress ? `<span class="driver-progress">${driver.tripProgress}</span>` : ""}
+          ${driver.tripProgress ? `<span class="${progressClass}">${driver.tripProgress}</span>` : ""}
+          ${isCompleted ? '<span style="font-size:11px;color:#22c55e;margin-left:4px;">✓ COMPLETE</span>' : ""}
           <span class="collapse-icon">▾</span>
         </div>
         <div class="stops-wrap">
@@ -390,9 +418,10 @@ function renderBoard(terminals) {
 
       (driver.stops || []).forEach(stop => {
         const isCurrent = stop.isCurrentStop === "1" || stop.isCurrentStop === 1;
-        html += `<tr class="stop-row${isCurrent ? " current" : ""}">
+        const rowClass = isCompleted ? "stop-row" : `stop-row${isCurrent ? " current" : ""}`;
+        html += `<tr class="${rowClass}">
           <td>${stop.stopSeq}</td>
-          <td><span class="event-code event-${stop.eventCode}">${stop.eventCode}</span>${isCurrent ? '<span class="current-badge">NOW</span>' : ""}</td>
+          <td><span class="event-code event-${stop.eventCode}">${stop.eventCode}</span>${isCurrent && !isCompleted ? '<span class="current-badge">NOW</span>' : ""}${isCompleted ? '<span class="done-badge">✓</span>' : ""}</td>
           <td title="${stop.stopCompany}">${trunc(stop.stopCompany, 26)}</td>
           <td>${stop.city}</td>
           <td>${stop.state}</td>
@@ -422,13 +451,7 @@ function renderBoard(terminals) {
 }
 
 function applySearch() { if (boardData) renderBoard(boardData); }
-function toggleDriver(key) {
-  const el = document.getElementById(`db-${key}`);
-  if (!el) return;
-  el.classList.toggle("collapsed");
-  if (el.classList.contains("collapsed")) collapsedDrivers.add(key);
-  else collapsedDrivers.delete(key);
-}
+function toggleDriver(key) { document.getElementById(`db-${key}`)?.classList.toggle("collapsed"); }
 function showLoading() {
   document.getElementById("board").innerHTML = `<div class="state-msg"><div class="spinner"></div><div class="title">Loading drivers…</div></div>`;
   document.getElementById("driverCount").textContent = "";
@@ -456,7 +479,6 @@ function trunc(str, len) {
   return str.length > len ? str.slice(0, len) + "…" : str;
 }
 
-// Auto-load if already logged in
 if (sessionStorage.getItem("norlo_auth") === "1") loadData();
 </script>
 </body>
