@@ -170,6 +170,19 @@ contain-intrinsic-size: auto 60px;
 
 **Diagnostic trap to avoid:** when a user reports a freeze that "also lags the Claude extension" or "freezes the whole PC", that is the tell that the stall is browser-wide (paint/composite or OS-level), not a per-tab JS main-thread stall. Chrome's built-in Task Manager (Shift+Esc) separates tab processes from extension processes and confirms this quickly.
 
+### Sticky sub-header nav + anchor-jump landing
+The LTL Trip Folder Board's tab bar (`LTL / Flatbed / OTR / Completed Trips`) doubles as a jump-nav row — terminal name buttons on the right side smooth-scroll to each terminal section. Sticky positioning + anchor-jump has three gotchas worth documenting because they'll come back on every future dashboard that grows beyond a single viewport.
+
+**Layered sticky bars need explicit z-index.** The NORLO header is `position: sticky; top: 0; z-index: 100`. The tab bar sits directly below at `position: sticky; top: 56px; z-index: 99`. Both stay pinned as the driver rows scroll under them. NORLO's higher z-index means it wins any overlap fight — critical because dropdowns, modals, and the HOS backdrop (`z-index: 200`) all need to layer sensibly against the stack.
+
+**Anchor jumps require `scroll-margin-top` or targets land behind sticky bars.** `element.scrollIntoView({block: 'start'})` scrolls the element to y=0 in the viewport, which for a two-tier sticky header stack means the target lands *behind* both bars. Fix: `.terminal-block { scroll-margin-top: 110px; }` (56px NORLO + ~44px tab bar + 10px breathing room). The browser then offsets the scroll so the target lands just below the sticky stack. Applies wherever the dashboard uses smooth-scroll to an anchor — future in-page nav in the OTR boards or Driver Planning rebuild needs the same treatment.
+
+**Dynamic nav buttons must rebuild on every render, not once at load.** The jump buttons in `#terminalJumpBar` are populated inside `renderBoard()` from the same `rendered` array the terminal blocks come from. This gives you three behaviors for free: (1) tab switch swaps the button set to the new tab's terminals, (2) search filter narrows the buttons alongside the driver blocks (a Grand Rapids driver name shown → only Grand Rapids button), (3) empty state clears the button bar. Do not attach them at load time or hardcode the terminal list — the whole point of the pattern is that the nav matches what's on screen.
+
+**Floating action buttons use scroll listener + `.visible` class.** The back-to-top pill (`#backToTop`) is a fixed-position element hidden by `display: none` at load. A passive scroll listener toggles `.visible { display: block }` past `window.scrollY > 400`. Two rules: (1) always attach with `{ passive: true }` so it doesn't block scroll performance (matters at 60fps on long documents), (2) don't animate the show/hide — keep it a display swap. Fade-in on a document-wide scroll listener is a subtle performance tax that adds up on long boards.
+
+**Rule for future dashboards:** any board that grows past a single viewport (LTL Empty Board, OTR Fronthaul/Backhaul, Driver Planning Sheet rebuild) gets this pattern from day one — sticky sub-header with explicit z-index below the NORLO header, `scroll-margin-top` on major anchor targets, dynamic in-nav buttons rebuilt on every render, floating back-to-top past 400px. Same green pill vocabulary (`#052e16` bg, `#16a34a` border, `#86efac` text, mono uppercase) keeps the nav language consistent across dashboards.
+
 ---
 
 ## SQL User Setup

@@ -143,6 +143,7 @@ Looker Studio not in use.
 11. ✅ Added Completed Trips tab (SQL `@CompletedOnly` + frontend rendering)
 12. ✅ Added HOS chip per driver — Apps Script `action=hos&email=X` calls Geotab, `index.html` opens modal with Drive Time Remaining + Workday Remaining (Jul 8 2026)
 13. ✅ Applied `content-visibility: auto` + `contain-intrinsic-size: auto 60px` to `.driver-block` in `index.html` to eliminate collapse/expand freeze on the 110-driver DOM (Jul 8 2026 — see ARCHITECTURE.md for the paint/composite lesson)
+14. ✅ Added terminal quick-jump nav — dynamic buttons in the tab bar that smooth-scroll to each terminal section, sticky tab bar pinned under the NORLO header, floating back-to-top pill (Jul 8 2026 — see ARCHITECTURE.md for the sticky sub-header + anchor-jump pattern)
 
 **Deferred / Not started:**
 - ⏸ Load Sheet & Shuttle Sheet dashboards (DOMO field confirmations still open)
