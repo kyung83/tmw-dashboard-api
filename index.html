@@ -81,6 +81,16 @@
   .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
   .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
 
+  /* ARCHIVE DROPDOWN */
+  .archive-dropdown {
+    background: var(--surface2); border: 1px solid #16a34a; color: #86efac;
+    padding: 6px 10px; border-radius: 6px; font-size: 12px;
+    font-family: var(--font-mono); font-weight: 600; cursor: pointer;
+    display: none; outline: none;
+  }
+  .archive-dropdown:focus { border-color: #4ade80; }
+  .archive-dropdown option { background: var(--surface); color: var(--text); }
+
   .board { padding: 20px 24px; }
   .terminal-block { margin-bottom: 20px; scroll-margin-top: 110px; }
   .terminal-header { background: #1a0a2e; border: 1px solid #7c3aed; border-radius: 8px 8px 0 0; padding: 10px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
@@ -124,7 +134,7 @@
   .hos-chip:hover { background: #312e81; color: #c7d2fe; }
   .hos-chip:active { transform: translateY(1px); }
 
-  /* LOCATE chip — mirrors HOS chip shape, purple palette to distinguish */
+  /* LOCATE chip */
   .locate-chip {
     background: #2e1065; border: 1px solid #a855f7; color: #d8b4fe;
     font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
@@ -168,7 +178,7 @@
   .hos-close:hover { background: #2563eb; }
   .hos-spinner-wrap { display: flex; align-items: center; justify-content: center; padding: 20px 0; gap: 12px; color: var(--muted); font-size: 13px; }
 
-  /* LOCATE modal — mirrors HOS modal shape, purple palette */
+  /* LOCATE modal */
   .locate-modal-backdrop {
     position: fixed; inset: 0; background: rgba(0,0,0,0.65);
     display: none; align-items: center; justify-content: center;
@@ -215,6 +225,23 @@
     cursor: pointer;
   }
   .locate-close:hover { background: var(--border); }
+
+  /* IN PROGRESS banner for archives */
+  .in-progress-banner {
+    margin: 24px 0 12px; padding: 10px 16px;
+    background: #1a1000; border: 1px solid #f59e0b; border-radius: 8px; text-align: center;
+  }
+  .in-progress-banner span {
+    font-size: 13px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #fbbf24;
+  }
+  .driver-block.in-progress-driver { border-left-color: #f59e0b; border-right-color: #f59e0b; }
+  .driver-block.in-progress-driver:last-child { border-bottom-color: #f59e0b; }
+  .terminal-header.in-progress { background: #1a1000; border-color: #f59e0b; }
+  .terminal-header.in-progress:hover { background: #261800; }
+  .terminal-header.in-progress .terminal-name { color: #fbbf24; }
+  .terminal-header.in-progress .terminal-badge { background: #422006; color: #fbbf24; }
+  .terminal-header.in-progress .terminal-collapse-icon { color: #fbbf24; }
 
   .stops-table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--font-mono); }
   .stops-table th { background: var(--surface2); color: var(--muted); font-weight: 600; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
@@ -268,6 +295,9 @@
         <span class="btn-text">↻ Refresh Board</span>
       </button>
       <span class="refresh-status" id="refreshStatus" style="display:none">Pulling data… up to 30s</span>
+      <select class="archive-dropdown" id="archiveDropdown" onchange="onArchiveSelect(this.value)">
+        <option value="">📅 Live — Today</option>
+      </select>
     </div>
     <div class="header-right">
       <span class="last-updated" id="lastUpdated">—</span>
@@ -360,6 +390,9 @@ let currentRole = "ltl";
 let boardData = null;
 let refreshPollTimer = null;
 let autoRefreshTimer = null;
+let selectedArchiveDate = null;
+let archiveCompletedData = null;
+let archiveInProgressData = null;
 
 // AUTH
 function doLogin() {
@@ -389,24 +422,243 @@ if (sessionStorage.getItem("norlo_auth") === "1") {
   document.getElementById("boardScreen").style.display = "block";
 }
 
-// TAB — search term persists across tabs
+// TAB
 function switchTab(el) {
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   el.classList.add("active");
   currentRole = el.dataset.role;
   const btn = document.getElementById("refreshBtn");
+  const dropdown = document.getElementById("archiveDropdown");
   if (currentRole === "completed") {
     btn.classList.add("completed-refresh");
     btn.querySelector(".btn-text").textContent = "↻ Refresh Completed";
+    dropdown.style.display = "inline-block";
+    loadArchiveDates();
   } else {
     btn.classList.remove("completed-refresh");
     btn.querySelector(".btn-text").textContent = "↻ Refresh Board";
+    dropdown.style.display = "none";
+    dropdown.value = "";
+    selectedArchiveDate = null;
+    archiveCompletedData = null;
+    archiveInProgressData = null;
   }
   loadData();
 }
 
+// ARCHIVE
+async function loadArchiveDates() {
+  try {
+    const url = `${APPS_SCRIPT_URL}?token=${encodeURIComponent(API_TOKEN)}&action=archiveDates`;
+    const res = await fetch(url);
+    const json = await res.json();
+    const dropdown = document.getElementById("archiveDropdown");
+    const current = dropdown.value;
+    dropdown.innerHTML = '<option value="">📅 Live — Today</option>';
+    (json.dates || []).forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d;
+      opt.textContent = "📅 " + d;
+      dropdown.appendChild(opt);
+    });
+    if (current) dropdown.value = current;
+  } catch (err) {
+    console.error("Failed to load archive dates:", err);
+  }
+}
+
+async function onArchiveSelect(dateStr) {
+  if (!dateStr) {
+    selectedArchiveDate = null;
+    archiveCompletedData = null;
+    archiveInProgressData = null;
+    loadData();
+    return;
+  }
+  selectedArchiveDate = dateStr;
+  showLoading();
+  try {
+    const url = `${APPS_SCRIPT_URL}?token=${encodeURIComponent(API_TOKEN)}&action=readArchive&date=${encodeURIComponent(dateStr)}`;
+    const res = await fetch(url);
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+    archiveCompletedData = parseRows(json.completed || []);
+    archiveInProgressData = parseRows(json.inProgress || []);
+    renderArchive();
+    document.getElementById("lastUpdated").textContent = "Archive: " + dateStr;
+  } catch (err) {
+    showError(err.message);
+  }
+}
+
+function renderArchive() {
+  const board = document.getElementById("board");
+  const jumpBar = document.getElementById("terminalJumpBar");
+  const search = document.getElementById("searchInput").value.toLowerCase();
+  const completed = archiveCompletedData || [];
+  const inProgress = archiveInProgressData || [];
+
+  if (completed.length === 0 && inProgress.length === 0) {
+    board.innerHTML = '<div class="state-msg"><div class="icon">📅</div><div class="title">No data for ' + selectedArchiveDate + '</div><div class="sub">This archive may be empty.</div></div>';
+    document.getElementById("driverCount").textContent = "";
+    if (jumpBar) jumpBar.innerHTML = "";
+    return;
+  }
+
+  let html = "";
+  let totalDrivers = 0;
+  const rendered = [];
+
+  // COMPLETED SECTION
+  completed.forEach(function(terminal) {
+    var filtered = search
+      ? terminal.drivers.filter(function(d) {
+          return d.driverName.toLowerCase().includes(search) ||
+            d.driverID.toLowerCase().includes(search) ||
+            d.stops.some(function(s) { return (s.stopCompany||"").toLowerCase().includes(search) || (s.city||"").toLowerCase().includes(search); });
+        })
+      : terminal.drivers;
+    if (filtered.length === 0) return;
+    totalDrivers += filtered.length;
+    var termKey = "term-" + terminal.terminal.replace(/\s+/g, "-");
+    rendered.push({ name: terminal.terminal, key: termKey });
+
+    html += '<div class="terminal-block"><div class="terminal-header completed" onclick="toggleTerminal(\'' + termKey + '\')">';
+    html += '<span class="terminal-name">' + terminal.terminal + '</span>';
+    html += '<span class="terminal-badge">' + filtered.length + ' driver' + (filtered.length !== 1 ? 's' : '') + '</span>';
+    html += '<span class="terminal-collapse-icon" id="icon-' + termKey + '">▾</span></div>';
+    html += '<div id="' + termKey + '">';
+
+    filtered.forEach(function(driver) {
+      var dep = driver.departedFromYard ? fmtTime(driver.departedFromYard) : "N/A";
+      var key = driver.driverID + "-" + driver.movementNum;
+      html += '<div class="driver-block completed-driver" id="db-' + key + '">';
+      html += '<div class="driver-header" onclick="toggleDriver(\'' + key + '\')">';
+      html += '<span class="driver-name">' + driver.driverName + '</span>';
+      html += '<div class="driver-meta">';
+      html += '<span class="driver-meta-item">ID: <span>' + driver.driverID + '</span></span>';
+      html += '<span class="driver-meta-item">Elapsed: <span>' + (driver.elapsedFromYard || "N/A") + '</span></span>';
+      if (driver.equipClass) html += '<span class="driver-meta-item">Equip: <span>' + driver.equipClass + '</span></span>';
+      html += '<span class="driver-meta-item">Departed: <span>' + dep + '</span></span>';
+      html += '</div>';
+      if (driver.tripProgress) html += '<span class="driver-progress all-done">' + driver.tripProgress + '</span>';
+      html += '<span style="font-size:11px;color:#22c55e;margin-left:4px;">✓ COMPLETE</span>';
+      html += '<span class="collapse-icon">▾</span></div>';
+      html += '<div class="stops-wrap"><table class="stops-table"><thead><tr>';
+      html += '<th>#</th><th>Event</th><th>Company</th><th>City</th><th>ST</th>';
+      html += '<th>Arrival</th><th>Departure</th><th>Est</th><th>Dep</th>';
+      html += '<th>Order</th><th>Status</th><th>Pcs</th>';
+      html += '</tr></thead><tbody>';
+      (driver.stops || []).forEach(function(stop) {
+        html += '<tr class="stop-row">';
+        html += '<td>' + stop.stopSeq + '</td>';
+        html += '<td><span class="event-code event-' + stop.eventCode + '">' + stop.eventCode + '</span></td>';
+        html += '<td title="' + stop.stopCompany + '">' + trunc(stop.stopCompany, 26) + '</td>';
+        html += '<td>' + stop.city + '</td><td>' + stop.state + '</td>';
+        html += '<td>' + fmtDT(stop.arrival) + '</td><td>' + fmtDT(stop.departure) + '</td>';
+        html += '<td><span class="status-pill status-' + stop.est + '">' + (stop.est || "—") + '</span></td>';
+        html += '<td><span class="status-pill status-' + stop.dep + '">' + (stop.dep || "—") + '</span></td>';
+        html += '<td>' + (stop.orderNumber || "—") + '</td>';
+        html += '<td>' + (stop.orderStatus || "—") + '</td>';
+        html += '<td>' + (stop.orderPieces || "—") + '</td></tr>';
+      });
+      html += '</tbody></table></div></div>';
+    });
+    html += '</div></div>';
+  });
+
+  // IN PROGRESS SECTION
+  if (inProgress.length > 0) {
+    var hasIPDrivers = inProgress.some(function(t) {
+      if (!search) return t.drivers.length > 0;
+      return t.drivers.some(function(d) {
+        return d.driverName.toLowerCase().includes(search) ||
+          d.driverID.toLowerCase().includes(search) ||
+          d.stops.some(function(s) { return (s.stopCompany||"").toLowerCase().includes(search) || (s.city||"").toLowerCase().includes(search); });
+      });
+    });
+
+    if (hasIPDrivers) {
+      html += '<div class="in-progress-banner"><span>⏳ Still In Progress at Archive Time</span></div>';
+
+      inProgress.forEach(function(terminal) {
+        var filtered = search
+          ? terminal.drivers.filter(function(d) {
+              return d.driverName.toLowerCase().includes(search) ||
+                d.driverID.toLowerCase().includes(search) ||
+                d.stops.some(function(s) { return (s.stopCompany||"").toLowerCase().includes(search) || (s.city||"").toLowerCase().includes(search); });
+            })
+          : terminal.drivers;
+        if (filtered.length === 0) return;
+        totalDrivers += filtered.length;
+        var termKey = "term-ip-" + terminal.terminal.replace(/\s+/g, "-");
+
+        html += '<div class="terminal-block"><div class="terminal-header in-progress" onclick="toggleTerminal(\'' + termKey + '\')">';
+        html += '<span class="terminal-name">' + terminal.terminal + '</span>';
+        html += '<span class="terminal-badge">' + filtered.length + ' driver' + (filtered.length !== 1 ? 's' : '') + '</span>';
+        html += '<span class="terminal-collapse-icon" id="icon-' + termKey + '">▾</span></div>';
+        html += '<div id="' + termKey + '">';
+
+        filtered.forEach(function(driver) {
+          var dep = driver.departedFromYard ? fmtTime(driver.departedFromYard) : "N/A";
+          var key = "ip-" + driver.driverID + "-" + driver.movementNum;
+          html += '<div class="driver-block in-progress-driver" id="db-' + key + '">';
+          html += '<div class="driver-header" onclick="toggleDriver(\'' + key + '\')">';
+          html += '<span class="driver-name">' + driver.driverName + '</span>';
+          html += '<div class="driver-meta">';
+          html += '<span class="driver-meta-item">ID: <span>' + driver.driverID + '</span></span>';
+          html += '<span class="driver-meta-item">Elapsed: <span>' + (driver.elapsedFromYard || "N/A") + '</span></span>';
+          if (driver.equipClass) html += '<span class="driver-meta-item">Equip: <span>' + driver.equipClass + '</span></span>';
+          html += '<span class="driver-meta-item">Departed: <span>' + dep + '</span></span>';
+          html += '</div>';
+          if (driver.tripProgress) html += '<span class="driver-progress">' + driver.tripProgress + '</span>';
+          html += '<span style="font-size:11px;color:#f59e0b;margin-left:4px;">⏳ IN PROGRESS</span>';
+          html += '<span class="collapse-icon">▾</span></div>';
+          html += '<div class="stops-wrap"><table class="stops-table"><thead><tr>';
+          html += '<th>#</th><th>Event</th><th>Company</th><th>City</th><th>ST</th>';
+          html += '<th>Arrival</th><th>Departure</th><th>Est</th><th>Dep</th>';
+          html += '<th>Order</th><th>Status</th><th>Pcs</th>';
+          html += '</tr></thead><tbody>';
+          (driver.stops || []).forEach(function(stop) {
+            var isCurrent = stop.isCurrentStop === "1" || stop.isCurrentStop === 1;
+            html += '<tr class="stop-row' + (isCurrent ? ' current' : '') + '">';
+            html += '<td>' + stop.stopSeq + '</td>';
+            html += '<td><span class="event-code event-' + stop.eventCode + '">' + stop.eventCode + '</span>' + (isCurrent ? '<span class="current-badge">NOW</span>' : '') + '</td>';
+            html += '<td title="' + stop.stopCompany + '">' + trunc(stop.stopCompany, 26) + '</td>';
+            html += '<td>' + stop.city + '</td><td>' + stop.state + '</td>';
+            html += '<td>' + fmtDT(stop.arrival) + '</td><td>' + fmtDT(stop.departure) + '</td>';
+            html += '<td><span class="status-pill status-' + stop.est + '">' + (stop.est || "—") + '</span></td>';
+            html += '<td><span class="status-pill status-' + stop.dep + '">' + (stop.dep || "—") + '</span></td>';
+            html += '<td>' + (stop.orderNumber || "—") + '</td>';
+            html += '<td>' + (stop.orderStatus || "—") + '</td>';
+            html += '<td>' + (stop.orderPieces || "—") + '</td></tr>';
+          });
+          html += '</tbody></table></div></div>';
+        });
+        html += '</div></div>';
+      });
+    }
+  }
+
+  if (!html) {
+    board.innerHTML = '<div class="state-msg"><div class="icon">🔍</div><div class="title">No results</div><div class="sub">No drivers match "' + search + '".</div></div>';
+    document.getElementById("driverCount").textContent = "";
+    if (jumpBar) jumpBar.innerHTML = "";
+    return;
+  }
+
+  board.innerHTML = html;
+  document.getElementById("driverCount").textContent = totalDrivers + " driver" + (totalDrivers !== 1 ? "s" : "") + " (Archive: " + selectedArchiveDate + ")";
+  if (jumpBar) {
+    jumpBar.innerHTML = rendered.map(function(t) {
+      return '<span class="terminal-jump-btn" onclick="scrollToTerminal(\'' + t.key + '\')">' + t.name + '</span>';
+    }).join("");
+  }
+}
+
 // LOAD DATA
 async function loadData(preserveScroll = false) {
+  if (selectedArchiveDate) return;
   const savedScroll = preserveScroll ? window.scrollY : 0;
   if (!preserveScroll) showLoading();
   try {
@@ -482,6 +734,15 @@ function parseRows(rows) {
 async function triggerRefresh() {
   const btn = document.getElementById("refreshBtn");
   const status = document.getElementById("refreshStatus");
+  const dropdown = document.getElementById("archiveDropdown");
+
+  if (selectedArchiveDate) {
+    selectedArchiveDate = null;
+    archiveCompletedData = null;
+    archiveInProgressData = null;
+    if (dropdown) dropdown.value = "";
+  }
+
   btn.classList.add("loading");
   btn.disabled = true;
   status.style.display = "inline";
@@ -628,7 +889,13 @@ function renderBoard(terminals) {
   }
 }
 
-function applySearch() { if (boardData) renderBoard(boardData); }
+function applySearch() {
+  if (selectedArchiveDate && archiveCompletedData) {
+    renderArchive();
+  } else if (boardData) {
+    renderBoard(boardData);
+  }
+}
 
 function toggleDriver(key) {
   document.getElementById(`db-${key}`)?.classList.toggle("collapsed");
@@ -644,7 +911,6 @@ function toggleTerminal(key) {
   }
 }
 
-// NAV — terminal quick-jump + back-to-top
 function scrollToTerminal(key) {
   const inner = document.getElementById(key);
   const block = inner ? inner.closest('.terminal-block') : null;
@@ -782,9 +1048,9 @@ function fmtAge(seconds) {
 
 function classifyAge(seconds) {
   if (seconds == null || isNaN(seconds)) return "";
-  if (seconds < 300) return "locate-age-fresh";       // < 5 min
-  if (seconds < 1800) return "locate-age-stale";      // < 30 min
-  return "locate-age-old";                            // 30+ min
+  if (seconds < 300) return "locate-age-fresh";
+  if (seconds < 1800) return "locate-age-stale";
+  return "locate-age-old";
 }
 
 function showLoading() {
