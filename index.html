@@ -103,23 +103,19 @@
   .archive-dropdown option { background: var(--surface); color: var(--text); }
 
   /* FUEL MAP BUTTON */
-  .fuel-map-btn {
+.fuel-map-btn {
     display: inline-flex; align-items: center; gap: 7px;
-    background: linear-gradient(135deg, #f97316, #ea580c);
-    border: 1px solid #fb923c;
-    color: #fff; font-size: 12px; font-weight: 700;
+    background: #451a03;
+    border: 1px solid #b45309;
+    color: #fbbf24; font-size: 12px; font-weight: 700;
     letter-spacing: 0.06em; text-transform: uppercase;
     padding: 6px 16px; border-radius: 6px;
     font-family: var(--font-mono);
     text-decoration: none; cursor: pointer; user-select: none;
-    box-shadow: 0 0 14px rgba(249,115,22,0.35);
-    transition: all 0.2s;
+    transition: background 0.15s, color 0.15s;
   }
-  .fuel-map-btn:hover {
-    background: linear-gradient(135deg, #fb923c, #f97316);
-    box-shadow: 0 0 22px rgba(249,115,22,0.55);
-    transform: translateY(-1px);
-  }
+
+  .fuel-map-btn:hover { background: #78350f; color: #fde68a; }
   .fuel-map-btn:active { transform: translateY(0); }
 
   .board { padding: 20px 24px; }
