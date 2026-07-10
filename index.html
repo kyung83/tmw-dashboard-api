@@ -81,6 +81,17 @@
   .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
   .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
 
+  /* VIEW CONTROLS */
+  .view-controls { display: flex; gap: 4px; align-items: center; }
+  .view-ctrl-btn {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+    font-size: 11px; padding: 4px 10px; border-radius: 4px;
+    font-family: var(--font-mono); font-weight: 600; cursor: pointer;
+    user-select: none; transition: background 0.15s, color 0.15s, border-color 0.15s;
+    letter-spacing: 0.03em;
+  }
+  .view-ctrl-btn:hover { background: var(--border); color: var(--text); border-color: var(--muted); }
+
   /* ARCHIVE DROPDOWN */
   .archive-dropdown {
     background: var(--surface2); border: 1px solid #16a34a; color: #86efac;
@@ -319,6 +330,10 @@
       <input class="search-input" type="text" id="searchInput" placeholder="Search driver, company, city…" oninput="applySearch()">
     </div>
     <span class="driver-count" id="driverCount"></span>
+    <div class="view-controls">
+      <button class="view-ctrl-btn" onclick="collapseAll()" title="Collapse all terminals and driver trips">▸ Collapse All</button>
+      <button class="view-ctrl-btn" onclick="expandAll()" title="Expand all terminals and driver trips">▾ Expand All</button>
+    </div>
     <div class="legend">
       <div class="legend-item"><div class="legend-dot" style="background:#0e3a4a;border:1px solid #06b6d4"></div>Current stop</div>
       <div class="legend-item"><div class="legend-dot" style="background:rgba(34,197,94,0.2);border:1px solid #22c55e"></div>Actual (A)</div>
@@ -908,6 +923,31 @@ function toggleTerminal(key) {
     block.style.display = isHidden ? '' : 'none';
     if (icon) icon.style.transform = isHidden ? '' : 'rotate(-90deg)';
   }
+}
+
+// EXPAND / COLLAPSE ALL
+function collapseAll() {
+  // Collapse all driver stop tables
+  document.querySelectorAll('.driver-block').forEach(el => el.classList.add('collapsed'));
+  // Collapse all terminal containers
+  document.querySelectorAll('.terminal-collapse-icon').forEach(icon => {
+    const termKey = icon.id.replace('icon-', '');
+    const container = document.getElementById(termKey);
+    if (container) container.style.display = 'none';
+    icon.style.transform = 'rotate(-90deg)';
+  });
+}
+
+function expandAll() {
+  // Expand all terminal containers
+  document.querySelectorAll('.terminal-collapse-icon').forEach(icon => {
+    const termKey = icon.id.replace('icon-', '');
+    const container = document.getElementById(termKey);
+    if (container) container.style.display = '';
+    icon.style.transform = '';
+  });
+  // Expand all driver stop tables
+  document.querySelectorAll('.driver-block').forEach(el => el.classList.remove('collapsed'));
 }
 
 function scrollToTerminal(key) {
