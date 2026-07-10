@@ -378,7 +378,7 @@ const APP_PASS  = "DIspatch#1";
 const COLUMNS = [
   "RoleBucket","EquipClass","TerminalName","TerminalOrder",
   "DriverID","DriverName","OrderNumber","EventCode",
-  "StopCompany","City","State","Arrival","Departure",
+  "StopCompany","City","State","ZipCode","Arrival","Departure",
   "Est","Dep","OrderStatus","OrderPieces","Weight",
   "OrderCompletion","StopSeq","MovementNum",
   "DepartedFromYard","ElapsedFromYard","TripProgress",
@@ -680,8 +680,7 @@ async function loadData(preserveScroll = false) {
 function parseRows(rows) {
   const terminals = {};
   rows.forEach(row => {
-    while (row.length < 30) row.push("");
-    const rec = {};
+  while (row.length < 31) row.push("");    const rec = {};
     COLUMNS.forEach((col, i) => rec[col] = row[i] || "");
 
     const terminal = rec.TerminalName || "UNKNOWN";
