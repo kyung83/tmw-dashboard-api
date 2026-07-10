@@ -102,6 +102,26 @@
   .archive-dropdown:focus { border-color: #4ade80; }
   .archive-dropdown option { background: var(--surface); color: var(--text); }
 
+  /* FUEL MAP BUTTON */
+  .fuel-map-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    border: 1px solid #fb923c;
+    color: #fff; font-size: 12px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 6px 16px; border-radius: 6px;
+    font-family: var(--font-mono);
+    text-decoration: none; cursor: pointer; user-select: none;
+    box-shadow: 0 0 14px rgba(249,115,22,0.35);
+    transition: all 0.2s;
+  }
+  .fuel-map-btn:hover {
+    background: linear-gradient(135deg, #fb923c, #f97316);
+    box-shadow: 0 0 22px rgba(249,115,22,0.55);
+    transform: translateY(-1px);
+  }
+  .fuel-map-btn:active { transform: translateY(0); }
+
   .board { padding: 20px 24px; }
   .terminal-block { margin-bottom: 20px; scroll-margin-top: 110px; }
   .terminal-header { background: #1a0a2e; border: 1px solid #7c3aed; border-radius: 8px 8px 0 0; padding: 10px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
@@ -309,6 +329,7 @@
       <select class="archive-dropdown" id="archiveDropdown" onchange="onArchiveSelect(this.value)">
         <option value="">📅 Live — Today</option>
       </select>
+      <a class="fuel-map-btn" href="https://fuel-price-map.pages.dev/" target="_blank" rel="noopener">⛽ Fuel Map</a>
     </div>
     <div class="header-right">
       <span class="last-updated" id="lastUpdated">—</span>
