@@ -254,16 +254,8 @@ tr.driver-off td { color: #666; }
   <div id="gridContainer"></div>
 </div>
 
-<!-- ═══ BOTTOM DAY TABS ═══ -->
-<div id="dayTabBar">
-  <button class="day-tab active" data-day="0" onclick="switchDay(0)">Sun</button>
-  <button class="day-tab" data-day="1" onclick="switchDay(1)">Mon</button>
-  <button class="day-tab" data-day="2" onclick="switchDay(2)">Tue</button>
-  <button class="day-tab" data-day="3" onclick="switchDay(3)">Wed</button>
-  <button class="day-tab" data-day="4" onclick="switchDay(4)">Thu</button>
-  <button class="day-tab" data-day="5" onclick="switchDay(5)">Fri</button>
-  <button class="day-tab" data-day="6" onclick="switchDay(6)">Sat</button>
-</div>
+<!-- ═══ BOTTOM DAY TABS (built dynamically by JS) ═══ -->
+<div id="dayTabBar"></div>
 
 <!-- ═══ BACK TO TOP ═══ -->
 <button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑ Top</button>
@@ -349,22 +341,43 @@ function checkAuth() {
    INIT
    ───────────────────────────────────────────────────────────── */
 function initApp() {
-  markToday();
+  buildDayTabs();
   loadAllDays();
 }
 
-function markToday() {
-  const today = new Date().getDay(); // 0=Sun
-  document.querySelectorAll('.day-tab').forEach(tab => {
-    if (parseInt(tab.dataset.day) === today) {
-      tab.classList.add('today');
-    }
-  });
-  // Default to today's tab
-  currentDay = today;
-  document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
-  document.querySelector(`.day-tab[data-day="${today}"]`).classList.add('active');
-  document.getElementById('dayLabel').textContent = DAY_NAMES[today];
+function buildDayTabs() {
+  const bar = document.getElementById('dayTabBar');
+  const today = new Date();
+  bar.innerHTML = '';
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() + i);
+    const dayName = DAY_SHORT[d.getDay()];
+    const month = d.getMonth() + 1;
+    const date = d.getDate();
+    const label = `${dayName} ${month}/${date}`;
+
+    const btn = document.createElement('button');
+    btn.className = 'day-tab' + (i === 0 ? ' active today' : '');
+    btn.dataset.day = i;
+    btn.textContent = label;
+    btn.onclick = () => switchDay(i);
+    bar.appendChild(btn);
+  }
+
+  // Default to Day0 (today)
+  currentDay = 0;
+  updateDayLabel(0);
+}
+
+function updateDayLabel(dayIndex) {
+  const d = new Date();
+  d.setDate(d.getDate() + dayIndex);
+  const dayName = DAY_NAMES[d.getDay()];
+  const month = d.getMonth() + 1;
+  const date = d.getDate();
+  document.getElementById('dayLabel').textContent = `${dayName} ${month}/${date}`;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -535,7 +548,9 @@ function renderDay(dayIndex) {
   const data = allDaysData[dayIndex];
 
   if (!data || data.sections.length === 0) {
-    container.innerHTML = `<div class="empty-day">No dispatched drivers for ${DAY_NAMES[dayIndex]}</div>`;
+    const d = new Date();
+    d.setDate(d.getDate() + dayIndex);
+    container.innerHTML = `<div class="empty-day">No dispatched drivers for ${DAY_NAMES[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}</div>`;
     updateDriverCount(0);
     return;
   }
@@ -628,15 +643,17 @@ function switchDay(dayIndex) {
   document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
   document.querySelector(`.day-tab[data-day="${dayIndex}"]`).classList.add('active');
 
-  // Update day label
-  document.getElementById('dayLabel').textContent = DAY_NAMES[dayIndex];
+  // Update day label with actual date
+  updateDayLabel(dayIndex);
 
   // Render cached data instantly (no fetch)
   if (allDaysData[dayIndex]) {
     renderDay(dayIndex);
   } else {
+    const d = new Date();
+    d.setDate(d.getDate() + dayIndex);
     document.getElementById('gridContainer').innerHTML =
-      `<div class="empty-day">No data loaded for ${DAY_NAMES[dayIndex]}</div>`;
+      `<div class="empty-day">No data loaded for ${DAY_NAMES[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}</div>`;
   }
 }
 
