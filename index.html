@@ -295,6 +295,18 @@
   .state-msg .sub { font-size: 13px; text-align: center; }
   .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── REVENUE DISPLAY ── */
+  .driver-revenue {
+    display: flex; gap: 14px; align-items: center;
+    margin-left: auto; padding-right: 8px;
+    font-family: var(--font-mono); font-size: 11px;
+    flex-shrink: 0;
+  }
+  .driver-revenue-item { color: var(--muted); white-space: nowrap; }
+  .driver-revenue-item span { color: #fbbf24; font-weight: 700; }
+  .driver-revenue-item.rev-total span { color: #4ade80; font-weight: 700; font-size: 12px; }
+  .stop-rev { color: #fbbf24; font-weight: 600; font-size: 11px; }
 </style>
 </head>
 <body>
@@ -565,6 +577,7 @@ function renderArchive() {
     filtered.forEach(function(driver) {
       var dep = driver.departedFromYard ? fmtTime(driver.departedFromYard) : "N/A";
       var key = driver.driverID + "-" + driver.movementNum;
+      var rev = calcDriverRevenue(driver);
       html += '<div class="driver-block completed-driver" id="db-' + key + '">';
       html += '<div class="driver-header" onclick="toggleDriver(\'' + key + '\')">';
       html += '<span class="driver-name">' + driver.driverName + '</span>';
@@ -576,13 +589,15 @@ function renderArchive() {
       html += '</div>';
       if (driver.tripProgress) html += '<span class="driver-progress all-done">' + driver.tripProgress + '</span>';
       html += '<span style="font-size:11px;color:#22c55e;margin-left:4px;">✓ COMPLETE</span>';
+      html += '<div class="driver-revenue"><span class="driver-revenue-item rev-total">Total Mvmt: <span>$' + rev.totalMov.toFixed(2) + '</span></span></div>';
       html += '<span class="collapse-icon">▾</span></div>';
       html += '<div class="stops-wrap"><table class="stops-table"><thead><tr>';
       html += '<th>#</th><th>Event</th><th>Company</th><th>City</th><th>ST</th>';
       html += '<th>Arrival</th><th>Departure</th><th>Est</th><th>Dep</th>';
-      html += '<th>Order</th><th>Status</th><th>Pcs</th>';
+      html += '<th>Order</th><th>Rev</th><th>Status</th><th>Pcs</th>';
       html += '</tr></thead><tbody>';
       (driver.stops || []).forEach(function(stop) {
+        var stopRev = (stop.orderNumber && stop.orderNumber !== "0") ? fmtCur(stop.ordTotalCharge) : "";
         html += '<tr class="stop-row">';
         html += '<td>' + stop.stopSeq + '</td>';
         html += '<td><span class="event-code event-' + stop.eventCode + '">' + stop.eventCode + '</span></td>';
@@ -592,6 +607,7 @@ function renderArchive() {
         html += '<td><span class="status-pill status-' + stop.est + '">' + (stop.est || "—") + '</span></td>';
         html += '<td><span class="status-pill status-' + stop.dep + '">' + (stop.dep || "—") + '</span></td>';
         html += '<td>' + (stop.orderNumber || "—") + '</td>';
+        html += '<td><span class="stop-rev">' + stopRev + '</span></td>';
         html += '<td>' + (stop.orderStatus || "—") + '</td>';
         html += '<td>' + (stop.orderPieces || "—") + '</td></tr>';
       });
@@ -755,6 +771,9 @@ function parseRows(rows) {
       weight: rec.Weight,
       stopSeq: rec.StopSeq,
       isCurrentStop: rec.IsCurrentStop,
+      ordCharge: rec.OrdCharge,
+      ordAccessorial: rec.OrdAccessorial,
+      ordTotalCharge: rec.OrdTotalCharge,
     });
   });
 
@@ -853,6 +872,21 @@ function renderBoard(terminals) {
       const driverClass = isCompleted ? "driver-block completed-driver" : "driver-block";
       const progressClass = isCompleted ? "driver-progress all-done" : "driver-progress";
       const emailAttr = (driver.email || "").replace(/'/g, "\\'");
+      const rev = calcDriverRevenue(driver);
+
+      // Revenue display: LTL/Flatbed/OTR get current order + total; Completed gets total only
+      let revHtml = "";
+      if (isCompleted) {
+        revHtml = `<div class="driver-revenue">
+          <span class="driver-revenue-item rev-total">Total Mvmt: <span>$${rev.totalMov.toFixed(2)}</span></span>
+        </div>`;
+      } else {
+        revHtml = `<div class="driver-revenue">
+          <span class="driver-revenue-item">Ord: <span>${rev.hasCurrent ? "$"+rev.curCharge.toFixed(2) : "—"}</span></span>
+          <span class="driver-revenue-item">Acc: <span>${rev.hasCurrent ? "$"+rev.curAcc.toFixed(2) : "—"}</span></span>
+          <span class="driver-revenue-item rev-total">Mvmt: <span>$${rev.totalMov.toFixed(2)}</span></span>
+        </div>`;
+      }
 
       html += `<div class="${driverClass}" id="db-${key}">
         <div class="driver-header" onclick="toggleDriver('${key}')">
@@ -869,6 +903,7 @@ function renderBoard(terminals) {
           </div>
           ${driver.tripProgress ? `<span class="${progressClass}">${driver.tripProgress}</span>` : ""}
           ${isCompleted ? '<span style="font-size:11px;color:#22c55e;margin-left:4px;">✓ COMPLETE</span>' : ""}
+          ${revHtml}
           <span class="collapse-icon">▾</span>
         </div>
         <div class="stops-wrap">
@@ -876,12 +911,13 @@ function renderBoard(terminals) {
             <thead><tr>
               <th>#</th><th>Event</th><th>Company</th><th>City</th><th>ST</th>
               <th>Arrival</th><th>Departure</th><th>Est</th><th>Dep</th>
-              <th>Order</th><th>Status</th><th>Pcs</th>
+              <th>Order</th>${isCompleted ? "<th>Rev</th>" : ""}<th>Status</th><th>Pcs</th>
             </tr></thead><tbody>`;
 
       (driver.stops || []).forEach(stop => {
         const isCurrent = stop.isCurrentStop === "1" || stop.isCurrentStop === 1;
         const rowClass = isCompleted ? "stop-row" : `stop-row${isCurrent ? " current" : ""}`;
+        const revCell = isCompleted ? `<td><span class="stop-rev">${stop.orderNumber && stop.orderNumber !== "0" ? fmtCur(stop.ordTotalCharge) : ""}</span></td>` : "";
         html += `<tr class="${rowClass}">
           <td>${stop.stopSeq}</td>
           <td><span class="event-code event-${stop.eventCode}">${stop.eventCode}</span>${isCurrent && !isCompleted ? '<span class="current-badge">NOW</span>' : ""}</td>
@@ -893,6 +929,7 @@ function renderBoard(terminals) {
           <td><span class="status-pill status-${stop.est}">${stop.est||"—"}</span></td>
           <td><span class="status-pill status-${stop.dep}">${stop.dep||"—"}</span></td>
           <td>${stop.orderNumber||"—"}</td>
+          ${revCell}
           <td>${stop.orderStatus||"—"}</td>
           <td>${stop.orderPieces||"—"}</td>
         </tr>`;
@@ -1118,6 +1155,33 @@ function showError(msg) {
   document.getElementById("board").innerHTML = `<div class="state-msg"><div class="icon">⚠</div><div class="title">Could not load data</div><div class="sub">${msg}</div></div>`;
   document.getElementById("driverCount").textContent = "";
 }
+// ── REVENUE HELPERS ──
+function fmtCur(val) {
+  const n = parseFloat(val);
+  if (isNaN(n) || n === 0) return "";
+  return "$" + n.toFixed(2);
+}
+function calcDriverRevenue(driver) {
+  // Current order = order on the IsCurrentStop=1 stop (if it has an order)
+  const curStop = (driver.stops || []).find(s =>
+    (s.isCurrentStop === "1" || s.isCurrentStop === 1) &&
+    s.orderNumber && s.orderNumber !== "0"
+  );
+  const curCharge = curStop ? (parseFloat(curStop.ordCharge) || 0) : 0;
+  const curAcc = curStop ? (parseFloat(curStop.ordAccessorial) || 0) : 0;
+  // Total movement = sum of distinct orders' OrdTotalCharge
+  const seen = {};
+  let totalMov = 0;
+  (driver.stops || []).forEach(s => {
+    if (s.orderNumber && s.orderNumber !== "0" && !seen[s.orderNumber]) {
+      seen[s.orderNumber] = true;
+      const v = parseFloat(s.ordTotalCharge);
+      if (!isNaN(v)) totalMov += v;
+    }
+  });
+  return { curCharge, curAcc, totalMov, hasCurrent: !!curStop };
+}
+
 function fmtDT(val) {
   if (!val) return "—";
   const s = String(val);
