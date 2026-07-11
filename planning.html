@@ -704,6 +704,8 @@ window.addEventListener('scroll', () => {
    ───────────────────────────────────────────────────────────── */
 if (checkAuth()) {
   initApp();
+  // Auto-refresh every 5 minutes
+  setInterval(() => { if (!document.hidden) refreshData(); }, 300000);
 }
 </script>
 </body>
