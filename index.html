@@ -415,6 +415,7 @@ const COLUMNS = [
   "OrderCompletion","StopSeq","MovementNum",
   "DepartedFromYard","ElapsedFromYard","TripProgress",
   "IsCurrentStop","CompletedFlag","LastRefreshed",
+  "OrdCharge","OrdAccessorial","OrdTotalCharge",
   "ScheduledStart","GeotabLogin","Email"
 ];
 
@@ -712,7 +713,7 @@ async function loadData(preserveScroll = false) {
 function parseRows(rows) {
   const terminals = {};
   rows.forEach(row => {
-  while (row.length < 31) row.push("");    const rec = {};
+  while (row.length < 34) row.push("");   const rec = {};
     COLUMNS.forEach((col, i) => rec[col] = row[i] || "");
 
     const terminal = rec.TerminalName || "UNKNOWN";
