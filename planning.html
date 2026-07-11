@@ -443,8 +443,10 @@ function parseDay(rows) {
   // Group by driver — collect all stops per driver
   const driverMap = {};
   records.forEach(rec => {
-    const id = rec.DriverID;
+const id = rec.DriverID;
     if (!id) return;
+    if (rec.DriverName && rec.DriverName.includes(',MOCK')) return;
+    if (id === 'STIST') return;
     if (!driverMap[id]) {
       driverMap[id] = {
         id: id,
