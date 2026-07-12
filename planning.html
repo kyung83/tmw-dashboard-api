@@ -300,8 +300,8 @@ function parseDay(rows) {
       d.firstStopCity = realStops[0].City + (realStops[0].State ? ', ' + realStops[0].State : '');
       d.firstStopArrival = formatTime(realStops[0].Arrival);
     }
-    const cities = []; d.stops.forEach(s => { if (s.City && !cities.includes(s.City)) cities.push(s.City); });
-    d.routeSummary = cities.join(' \u2192 ');
+  const stopLabels = []; d.stops.forEach(s => { if (s.City) { const lbl = (s.StopCompany ? s.StopCompany + ' (' + s.City + ')' : s.City); if (!stopLabels.includes(lbl)) stopLabels.push(lbl); } });
+    d.routeSummary = stopLabels.join(' \u2192 ');
     const orderStops = d.stops.filter(s => s.OrderNumber && s.OrderNumber !== '0');
     if (orderStops.length > 0) {
       const st = orderStops[0].OrderStatus;
