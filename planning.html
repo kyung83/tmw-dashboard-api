@@ -225,8 +225,7 @@ const COLUMNS = [
   'Arrival','Departure','Est','Dep','OrderStatus','OrderPieces','Weight',
   'OrderCompletion','StopSeq','MovementNum','DepartedFromYard','ElapsedFromYard',
   'TripProgress','IsCurrentStop','CompletedFlag','LastRefreshed',
-  'OrdCharge','OrdAccessorial','OrdTotalCharge'
-];
+  'OrdCharge','OrdAccessorial','OrdTotalCharge','Tractor'];
 
 let allDaysData = {};
 let currentDay = 0;
@@ -309,7 +308,8 @@ function parseDay(rows) {
       d.tripStatus = st === 'CMP' ? 'Completed' : st === 'DSP' ? 'Dispatched' : st === 'STD' ? 'Started' : st === 'PLN' ? 'Planned' : st || '';
     }
     d.startTime = formatTime(d.stops[0] && d.stops[0].DepartedFromYard) || '';
-    if (!d.firstStopArrival && d.stops.length > 0) d.firstStopArrival = formatTime(d.stops[0].Arrival) || '';
+    d.truck = '';
+    d.stops.forEach(s => { if (s.Tractor && s.Tractor !== 'UNKNOWN' && !d.truck) d.truck = s.Tractor; });    if (!d.firstStopArrival && d.stops.length > 0) d.firstStopArrival = formatTime(d.stops[0].Arrival) || '';
   });
 
   // Group by terminal, then split LOCAL vs OTR within each
@@ -411,8 +411,7 @@ function driverRow(d) {
     '<td>' + d.firstStopArrival + '</td>' +
     '<td>' + d.firstStopCity + '</td>' +
     '<td class="route-summary" title="' + escapeHtml(d.routeSummary) + '">' + d.routeSummary + '</td>' +
-    '<td></td><td></td><td></td><td></td>' +
-    '<td>' + chip + '</td>' +
+    '<td>' + escapeHtml(d.truck) + '</td><td></td><td></td><td></td>' +    '<td>' + chip + '</td>' +
     '<td></td></tr>';
 }
 
