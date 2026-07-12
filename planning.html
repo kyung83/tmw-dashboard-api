@@ -79,17 +79,18 @@ body {
   margin: 0.4rem 0.5rem;
 }
 .section-header {
-  background: #ffd700;
-  border: 1px solid #e6c200;border-radius: 4px 4px 0 0;
+  background: linear-gradient(to bottom, #f0a500, #d4940a);
+  border: 1px solid #b8820a; border-radius: 4px 4px 0 0;
   padding: 0.5rem 0.8rem; cursor: pointer;
   display: flex; align-items: center; justify-content: space-between;
   user-select: none; transition: background 0.15s;
 }
-.section-header:hover { background: #ffe033; }
+.section-header:hover { background: linear-gradient(to bottom, #f5b820, #e0a010); }
 .section-header.collapsed { border-radius: 4px; }
 .section-title {
-color: #333; font-size: 0.8rem; font-weight: 700;
+  color: #fff; font-size: 0.8rem; font-weight: 700;
   letter-spacing: 0.5px; text-transform: uppercase;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.3);
 }
 .section-count {
   color: rgba(255,255,255,0.8); font-size: 0.7rem; font-weight: 500;
@@ -108,31 +109,53 @@ color: #333; font-size: 0.8rem; font-weight: 700;
 /* ── Planning Grid Table ─────────────────────────────────── */
 .planning-table {
   width: 100%; border-collapse: collapse; font-size: 0.75rem;
+  table-layout: fixed;
 }
 .planning-table thead th {
   background: #274e13; color: #fff; font-weight: 600;
   padding: 0.4rem 0.5rem; text-align: left; font-size: 0.65rem;
   letter-spacing: 0.5px; text-transform: uppercase;
   border-bottom: 2px solid #1a3a0d; white-space: nowrap;
+  border-right: 1px solid #1a3a0d;
 }
+.planning-table thead th:last-child { border-right: none; }
+/* Column widths */
+.planning-table th:nth-child(1),
+.planning-table td:nth-child(1) { width: 150px; }    /* Driver */
+.planning-table th:nth-child(2),
+.planning-table td:nth-child(2) { width: 75px; }     /* Start */
+.planning-table th:nth-child(3),
+.planning-table td:nth-child(3) { width: 90px; }     /* Arr 1st */
+.planning-table th:nth-child(4),
+.planning-table td:nth-child(4) { width: 130px; }    /* City */
+.planning-table th:nth-child(6),
+.planning-table td:nth-child(6) { width: 90px; }     /* Status */
+/* Column 5 (Route Summary) gets remaining space via table-layout:fixed */
+
+/* Column background accents — full stripe down */
+.planning-table td:nth-child(1) { background: #e6eed9; }  /* driver — light green */
+.planning-table td:nth-child(2) { background: #fef9e0; }  /* start — light yellow */
+.planning-table td:nth-child(3) { background: #fef9e0; }  /* arr 1st — light yellow */
+.planning-table td:nth-child(4) { background: #e6eed9; }  /* city — light green */
+.planning-table td:nth-child(5) { background: #fff; }     /* route — white */
+.planning-table td:nth-child(6) { background: #f5f0e0; }  /* status — cream */
+
 .planning-table tbody tr {
-  border-bottom: 1px solid #e0e0e0; transition: background 0.1s;
+  border-bottom: 1px solid #d0d0d0; transition: background 0.1s;
 }
-.planning-table tbody tr:nth-child(even) { background: #f8f6f0; }
-.planning-table tbody tr:nth-child(odd) { background: #fff; }
-.planning-table tbody tr:hover { background: #eef6ee; }
+.planning-table tbody tr:hover td { filter: brightness(0.95); }
 .planning-table td {
   padding: 0.4rem 0.5rem; vertical-align: middle;
   color: #333; white-space: nowrap; overflow: hidden;
-  text-overflow: ellipsis; max-width: 220px;
-  border-right: 1px solid #e8e8e8;
+  text-overflow: ellipsis;
+  border-right: 1px solid #d0d0d0;
 }
 .planning-table td:last-child { border-right: none; }
 .planning-table td.driver-name {
-  color: #111; font-weight: 600; max-width: 180px;
+  color: #111; font-weight: 600;
 }
 .planning-table td.route-summary {
-  color: #666; font-size: 0.7rem; max-width: 320px;
+  color: #555; font-size: 0.7rem;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
