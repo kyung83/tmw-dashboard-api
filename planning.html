@@ -49,6 +49,7 @@ body {
   display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
 }
 .toolbar-left { display: flex; align-items: center; gap: 0.5rem; }
+.toolbar-center { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; overflow-x: auto; }
 .toolbar-right { display: flex; align-items: center; gap: 0.5rem; }
 .toolbar-btn {
   background: #fff; border: 1px solid #bbb; border-radius: 4px;
@@ -56,6 +57,13 @@ body {
   cursor: pointer; font-weight: 500; transition: all 0.15s;
 }
 .toolbar-btn:hover { border-color: #1a472a; color: #1a472a; background: #eef6ee; }
+.jump-btn {
+  background: #274e13; border: 1px solid #3a6b1e; border-radius: 3px;
+  color: #fff; padding: 0.2rem 0.45rem; font-size: 0.6rem;
+  cursor: pointer; font-weight: 600; white-space: nowrap;
+  text-transform: uppercase; letter-spacing: 0.3px; transition: background 0.15s;
+}
+.jump-btn:hover { background: #3a6b1e; }
 #searchInput {
   background: #fff; border: 1px solid #bbb; border-radius: 4px;
   color: #333; padding: 0.3rem 0.6rem; font-size: 0.75rem;
@@ -77,26 +85,26 @@ body {
   content-visibility: auto;
   contain-intrinsic-size: auto 60px;
   margin: 0.4rem 0.5rem;
+  scroll-margin-top: 100px;
 }
 .section-header {
-  background: linear-gradient(to bottom, #f0a500, #d4940a);
-  border: 1px solid #b8820a; border-radius: 4px 4px 0 0;
+  background: #ffd700;
+  border: 1px solid #e6c200; border-radius: 4px 4px 0 0;
   padding: 0.5rem 0.8rem; cursor: pointer;
   display: flex; align-items: center; justify-content: space-between;
   user-select: none; transition: background 0.15s;
 }
-.section-header:hover { background: linear-gradient(to bottom, #f5b820, #e0a010); }
+.section-header:hover { background: #ffe033; }
 .section-header.collapsed { border-radius: 4px; }
 .section-title {
-  color: #fff; font-size: 0.8rem; font-weight: 700;
+  color: #333; font-size: 0.8rem; font-weight: 700;
   letter-spacing: 0.5px; text-transform: uppercase;
-  text-shadow: 0 1px 1px rgba(0,0,0,0.3);
 }
 .section-count {
-  color: rgba(255,255,255,0.8); font-size: 0.7rem; font-weight: 500;
+  color: rgba(0,0,0,0.5); font-size: 0.7rem; font-weight: 500;
 }
 .section-chevron {
-  color: rgba(255,255,255,0.7); font-size: 0.75rem; transition: transform 0.15s;
+  color: rgba(0,0,0,0.4); font-size: 0.75rem; transition: transform 0.15s;
 }
 .section-header.collapsed .section-chevron { transform: rotate(-90deg); }
 .section-body {
@@ -113,21 +121,22 @@ body {
 }
 .planning-table thead th {
   background: #274e13; color: #fff; font-weight: 600;
-  padding: 0.4rem 0.5rem; text-align: left; font-size: 0.65rem;
+  padding: 0.4rem 0.5rem; text-align: left; font-size: 0.6rem;
   letter-spacing: 0.5px; text-transform: uppercase;
   border-bottom: 2px solid #1a3a0d; white-space: nowrap;
   border-right: 1px solid #1a3a0d;
 }
 .planning-table thead th:last-child { border-right: none; }
-/* Column widths */
+/* Column widths — 11 columns */
 .planning-table th:nth-child(1),
-.planning-table td:nth-child(1) { width: 150px; }    /* Driver */
+.planning-table td:nth-child(1) { width: 140px; }    /* Driver */
 .planning-table th:nth-child(2),
-.planning-table td:nth-child(2) { width: 75px; }     /* Start */
+.planning-table td:nth-child(2) { width: 65px; }     /* Start */
 .planning-table th:nth-child(3),
-.planning-table td:nth-child(3) { width: 90px; }     /* Arr 1st */
+.planning-table td:nth-child(3) { width: 80px; }     /* Arr 1st */
 .planning-table th:nth-child(4),
-.planning-table td:nth-child(4) { width: 130px; }    /* City */
+.planning-table td:nth-child(4) { width: 110px; }    /* City */
+/* Column 5 (Route) gets remaining space */
 .planning-table th:nth-child(6),
 .planning-table td:nth-child(6) { width: 50px; }     /* Truck */
 .planning-table th:nth-child(7),
@@ -135,25 +144,24 @@ body {
 .planning-table th:nth-child(8),
 .planning-table td:nth-child(8) { width: 45px; }     /* LD/MT */
 .planning-table th:nth-child(9),
-.planning-table td:nth-child(9) { width: 95px; }     /* Phone */
+.planning-table td:nth-child(9) { width: 90px; }     /* Phone */
 .planning-table th:nth-child(10),
-.planning-table td:nth-child(10) { width: 75px; }    /* Trip Status */
+.planning-table td:nth-child(10) { width: 70px; }    /* Trip Status */
 .planning-table th:nth-child(11),
-.planning-table td:nth-child(11) { width: 60px; }    /* Confirm */
-/* Column 5 (Route Summary) gets remaining space via table-layout:fixed */
+.planning-table td:nth-child(11) { width: 58px; }    /* Confirm */
 
 /* Column background accents — full stripe down */
-.planning-table td:nth-child(1) { background: #e6eed9; }  /* driver — light green */
-.planning-table td:nth-child(2) { background: #fef9e0; }  /* start — light yellow */
-.planning-table td:nth-child(3) { background: #fef9e0; }  /* arr 1st — light yellow */
-.planning-table td:nth-child(4) { background: #e6eed9; }  /* city — light green */
-.planning-table td:nth-child(5) { background: #fff; }     /* route — white */
-.planning-table td:nth-child(6) { background: #e6eed9; }  /* truck */
-.planning-table td:nth-child(7) { background: #e6eed9; }  /* trailer */
-.planning-table td:nth-child(8) { background: #fef9e0; }  /* ld/mt */
-.planning-table td:nth-child(9) { background: #e6eed9; }  /* phone */
-.planning-table td:nth-child(10) { background: #f5f0e0; } /* status */
-.planning-table td:nth-child(11) { background: #e6eed9; } /* confirm */
+.planning-table td:nth-child(1) { background: #e6eed9; }   /* driver — green */
+.planning-table td:nth-child(2) { background: #fef9e0; }   /* start — yellow */
+.planning-table td:nth-child(3) { background: #fef9e0; }   /* arr 1st — yellow */
+.planning-table td:nth-child(4) { background: #e6eed9; }   /* city — green */
+.planning-table td:nth-child(5) { background: #fff; }      /* route — white */
+.planning-table td:nth-child(6) { background: #e6eed9; }   /* truck — green */
+.planning-table td:nth-child(7) { background: #e6eed9; }   /* trailer — green */
+.planning-table td:nth-child(8) { background: #fef9e0; }   /* ld/mt — yellow */
+.planning-table td:nth-child(9) { background: #e6eed9; }   /* phone — green */
+.planning-table td:nth-child(10) { background: #f5f0e0; }  /* status — cream */
+.planning-table td:nth-child(11) { background: #e6eed9; }  /* confirm — green */
 
 .planning-table tbody tr {
   border-bottom: 1px solid #d0d0d0; transition: background 0.1s;
@@ -281,6 +289,7 @@ tr.driver-off td { color: #999; }
     <button class="toolbar-btn" onclick="collapseAll()">− Collapse All</button>
     <span id="driverCount"></span>
   </div>
+  <div class="toolbar-center" id="terminalJumpBar"></div>
   <div class="toolbar-right">
     <input type="text" id="searchInput" placeholder="⌕ Search drivers…" oninput="applySearch()">
   </div>
@@ -314,7 +323,7 @@ const API_TOKEN = 'norlo-planning-2026';
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-/* Planning TMW Data sheet columns (positional, same as sp_GetLTLBoard + financial cols) */
+/* Planning TMW Data sheet columns (positional) */
 const COLUMNS = [
   'RoleBucket','EquipClass','TerminalName','TerminalOrder','DriverID','DriverName',
   'OrderNumber','EventCode','StopCompany','City','State','ZipCode',
@@ -324,50 +333,15 @@ const COLUMNS = [
   'OrdCharge','OrdAccessorial','OrdTotalCharge'
 ];
 
-/* ─── Section order (canonical from Monday, normalized names) ─── */
-const SECTION_ORDER = [
-  { key: 'CLARE_BOX',          label: 'Clare Box Truck Drivers' },
-  { key: 'CLARE_PARTTIME',     label: 'Clare Part Time Drivers' },
-  { key: 'CLARE_LOCAL',        label: 'Clare Local Drivers' },
-  { key: 'OTR_SUNTHURS',      label: 'OTR Drivers — Sun to Thurs' },
-  { key: 'CLARE_OTR',          label: 'Clare OTR Drivers' },
-  { key: 'BOYNE_OTR',          label: 'Boyne / Grayling OTR Drivers' },
-  { key: 'SUSSEX_WI',          label: 'Sussex WI Drivers' },
-  { key: 'LUDINGTON_OTR',      label: 'Ludington OTR Drivers' },
-  { key: 'TN_DRIVERS',         label: 'TN Drivers' },
-  { key: 'FORT_WAYNE',         label: 'Fort Wayne Drivers' },
-  { key: 'TAYLOR_OTR',         label: 'Taylor OTR Drivers' },
-  { key: 'TAYLOR_BOX',         label: 'Taylor Box Truck Drivers' },
-  { key: 'TAYLOR_LOCAL',       label: 'Taylor Local Drivers' },
-  { key: 'LEAR_ROSCOMMON',     label: 'Lear — Roscommon Drivers' },
-  { key: 'TC_DRIVERS',         label: 'TC Drivers (Ennis Yard)' },
-  { key: 'CADILLAC_LOCAL',     label: 'Cadillac Local Drivers' },
-  { key: 'CADILLAC_OTR',       label: 'Cadillac OTR Drivers' },
-  { key: 'GR_TERMINAL',        label: 'GR Terminal Drivers' },
-  { key: 'GR_OTR',             label: 'GR OTR Drivers' },
-  { key: 'GR_BOX',             label: 'GR Box Truck Drivers' },
-  { key: 'GR_NONDEDICATED',    label: 'GR Local Non-Dedicated Drivers' },
-  { key: 'GR_DEDICATED',       label: 'GR Dedicated Drivers' },
-  { key: 'LAKESHORE',          label: 'Lakeshore Drivers' },
-  { key: 'CLARE_DEDICATED',    label: 'Clare Dedicated Drivers' },
-  { key: 'MIDLAND',            label: 'Midland Drivers' },
-  { key: 'AMM_MTPLEASANT',     label: 'AMM Mt Pleasant Drivers' },
-  { key: 'PCA_EDMORE',         label: 'PCA Edmore Drivers' },
-  { key: 'LANSING',            label: 'Lansing Drivers' },
-  { key: 'FLINT',              label: 'Flint Drivers' },
-  { key: 'REED_CITY',          label: 'Reed City Drivers' },
-  { key: 'LUDINGTON_LOCAL',    label: 'Ludington Local Drivers' },
-];
-
 /* ─────────────────────────────────────────────────────────────
    STATE
    ───────────────────────────────────────────────────────────── */
-let allDaysData = {};  // { 0: { sections: [...] }, 1: {...}, ... }
+let allDaysData = {};
 let currentDay = 0;
 let searchTerm = '';
 
 /* ─────────────────────────────────────────────────────────────
-   AUTH — single gate lives on index.html, we just check here
+   AUTH
    ───────────────────────────────────────────────────────────── */
 function signOut() {
   sessionStorage.removeItem('norlo_auth');
@@ -376,7 +350,6 @@ function signOut() {
 
 function checkAuth() {
   if (sessionStorage.getItem('norlo_auth') === '1') return true;
-  // Not logged in — send to index.html login
   window.location.href = 'index.html';
   return false;
 }
@@ -393,15 +366,10 @@ function buildDayTabs() {
   const bar = document.getElementById('dayTabBar');
   const today = new Date();
   bar.innerHTML = '';
-
   for (let i = 0; i < 7; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() + i);
-    const dayName = DAY_SHORT[d.getDay()];
-    const month = d.getMonth() + 1;
-    const date = d.getDate();
-    const label = `${dayName} ${month}/${date}`;
-
+    const label = `${DAY_SHORT[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}`;
     const btn = document.createElement('button');
     btn.className = 'day-tab' + (i === 0 ? ' active today' : '');
     btn.dataset.day = i;
@@ -409,8 +377,6 @@ function buildDayTabs() {
     btn.onclick = () => switchDay(i);
     bar.appendChild(btn);
   }
-
-  // Default to Day0 (today)
   currentDay = 0;
   updateDayLabel(0);
 }
@@ -418,10 +384,8 @@ function buildDayTabs() {
 function updateDayLabel(dayIndex) {
   const d = new Date();
   d.setDate(d.getDate() + dayIndex);
-  const dayName = DAY_NAMES[d.getDay()];
-  const month = d.getMonth() + 1;
-  const date = d.getDate();
-  document.getElementById('dayLabel').textContent = `${dayName} ${month}/${date}`;
+  document.getElementById('dayLabel').textContent =
+    `${DAY_NAMES[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}`;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -431,40 +395,18 @@ async function loadAllDays() {
   const loading = document.getElementById('loadingOverlay');
   loading.style.display = 'block';
   document.getElementById('gridContainer').innerHTML = '';
-
-  if (!PLANNING_SCRIPT_URL) {
-    // No endpoint configured yet — show setup message
-    loading.innerHTML = `
-      <div style="color:#86efac; font-size:0.9rem; margin-bottom:1rem;">
-        ✓ Planning Grid UI is ready
-      </div>
-      <div style="color:#888; font-size:0.8rem; max-width:400px; margin:0 auto; line-height:1.5;">
-        Next step: create the Apps Script endpoint on the
-        Planning TMW Data sheet to serve JSON. The fetch architecture
-        is wired and waiting — just drop in the URL.
-      </div>
-    `;
-    return;
-  }
-
   try {
-    // Fetch all 7 days in one call
     const url = `${PLANNING_SCRIPT_URL}?token=${encodeURIComponent(API_TOKEN)}&action=readAllDays`;
     const resp = await fetch(url);
     const data = await resp.json();
-
     if (data.error) throw new Error(data.error);
-
-    // Parse and cache each day
     for (let d = 0; d < 7; d++) {
-      const rows = (data.days && data.days[d]) || [];
-      allDaysData[d] = parseDay(rows);
+      allDaysData[d] = parseDay((data.days && data.days[d]) || []);
     }
-
     loading.style.display = 'none';
     renderDay(currentDay);
   } catch (err) {
-    loading.innerHTML = `<div style="color:#ef4444;">Error loading data: ${err.message}</div>`;
+    loading.innerHTML = `<div style="color:#c00;">Error loading data: ${err.message}</div>`;
   }
 }
 
@@ -474,25 +416,23 @@ function refreshData() {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   PARSE — convert raw row arrays into driver-grouped sections
+   PARSE
    ───────────────────────────────────────────────────────────── */
 function parseDay(rows) {
-  // Map rows to objects
   const records = rows.map(row => {
     const rec = {};
     COLUMNS.forEach((col, i) => rec[col] = row[i] || '');
     return rec;
   });
-
-  // Group by driver — collect all stops per driver
   const driverMap = {};
   records.forEach(rec => {
     const id = rec.DriverID;
     if (!id) return;
+    if (rec.DriverName && rec.DriverName.includes(',MOCK')) return;
+    if (id === 'STIST') return;
     if (!driverMap[id]) {
       driverMap[id] = {
-        id: id,
-        name: rec.DriverName,
+        id, name: rec.DriverName,
         terminal: rec.TerminalName,
         terminalOrder: parseInt(rec.TerminalOrder) || 999,
         roleBucket: rec.RoleBucket,
@@ -503,30 +443,23 @@ function parseDay(rows) {
     driverMap[id].stops.push(rec);
   });
 
-  // Sort stops by StopSeq
   Object.values(driverMap).forEach(d => {
     d.stops.sort((a, b) => (parseInt(a.StopSeq) || 0) - (parseInt(b.StopSeq) || 0));
-    // Derive display fields
     d.firstStopCity = '';
     d.firstStopArrival = '';
     d.routeSummary = '';
     d.tripStatus = '';
 
-    // Find first non-BMT stop for city/arrival
     const realStops = d.stops.filter(s => s.EventCode && !s.EventCode.includes('BMT') && !s.EventCode.includes('RTP'));
     if (realStops.length > 0) {
       d.firstStopCity = realStops[0].City + (realStops[0].State ? ', ' + realStops[0].State : '');
       d.firstStopArrival = formatTime(realStops[0].Arrival);
     }
 
-    // Route summary: unique cities in order
     const cities = [];
-    d.stops.forEach(s => {
-      if (s.City && !cities.includes(s.City)) cities.push(s.City);
-    });
+    d.stops.forEach(s => { if (s.City && !cities.includes(s.City)) cities.push(s.City); });
     d.routeSummary = cities.join(' → ');
 
-    // Trip status from OrderStatus of first order stop
     const orderStops = d.stops.filter(s => s.OrderNumber && s.OrderNumber !== '0');
     if (orderStops.length > 0) {
       const status = orderStops[0].OrderStatus;
@@ -536,16 +469,12 @@ function parseDay(rows) {
                      status === 'PLN' ? 'Planned' : status || '';
     }
 
-    // Departed from yard time as "start time"
     d.startTime = formatTime(d.stops[0]?.DepartedFromYard) || '';
-
-    // First stop arrival
     if (!d.firstStopArrival && d.stops.length > 0) {
       d.firstStopArrival = formatTime(d.stops[0]?.Arrival) || '';
     }
   });
 
-  // Group drivers by terminal
   const drivers = Object.values(driverMap);
   const terminalGroups = {};
   drivers.forEach(d => {
@@ -553,12 +482,8 @@ function parseDay(rows) {
     if (!terminalGroups[t]) terminalGroups[t] = { terminal: t, order: d.terminalOrder, drivers: [] };
     terminalGroups[t].drivers.push(d);
   });
-
-  // Sort groups by terminal order, then drivers by name
-  const sections = Object.values(terminalGroups)
-    .sort((a, b) => a.order - b.order);
+  const sections = Object.values(terminalGroups).sort((a, b) => a.order - b.order);
   sections.forEach(s => s.drivers.sort((a, b) => a.name.localeCompare(b.name)));
-
   return { sections, driverCount: drivers.length };
 }
 
@@ -575,7 +500,6 @@ function formatTime(dateStr) {
 }
 
 function formatDriverName(raw) {
-  // LASTNAME,FIRSTNAME → Lastname, Firstname
   if (!raw) return '';
   const parts = raw.split(',');
   if (parts.length < 2) return raw;
@@ -596,17 +520,17 @@ function renderDay(dayIndex) {
     d.setDate(d.getDate() + dayIndex);
     container.innerHTML = `<div class="empty-day">No dispatched drivers for ${DAY_NAMES[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}</div>`;
     updateDriverCount(0);
+    document.getElementById('terminalJumpBar').innerHTML = '';
     return;
   }
 
   let html = '';
   let totalDrivers = 0;
 
-  data.sections.forEach((section, si) => {
+  data.sections.forEach((section) => {
     const filteredDrivers = searchTerm
       ? section.drivers.filter(d => matchesSearch(d))
       : section.drivers;
-
     if (filteredDrivers.length === 0) return;
     totalDrivers += filteredDrivers.length;
 
@@ -625,14 +549,14 @@ function renderDay(dayIndex) {
               <tr>
                 <th>Driver</th>
                 <th>Start</th>
-                <th>Arr. 1st Stop</th>
+                <th>Arr. 1st</th>
                 <th>City</th>
                 <th>Route Summary</th>
                 <th>Truck</th>
                 <th>Trailer</th>
                 <th>LD/MT</th>
                 <th>Phone</th>
-                <th>Trip Status</th>
+                <th>Status</th>
                 <th>Confirm</th>
               </tr>
             </thead>
@@ -641,7 +565,7 @@ function renderDay(dayIndex) {
     filteredDrivers.forEach(d => {
       const statusChip = getStatusChip(d.tripStatus);
       html += `
-                <tr>
+              <tr>
                 <td class="driver-name">${formatDriverName(d.name)}</td>
                 <td>${d.startTime}</td>
                 <td>${d.firstStopArrival}</td>
@@ -666,6 +590,19 @@ function renderDay(dayIndex) {
   container.innerHTML = html;
   updateDriverCount(totalDrivers);
   window.scrollTo({ top: 0 });
+
+  // Build terminal jump buttons
+  const jumpBar = document.getElementById('terminalJumpBar');
+  const blocks = container.querySelectorAll('.section-block');
+  jumpBar.innerHTML = '';
+  blocks.forEach(s => {
+    const name = s.querySelector('.section-title').textContent;
+    const btn = document.createElement('button');
+    btn.className = 'jump-btn';
+    btn.textContent = name;
+    btn.onclick = () => s.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    jumpBar.appendChild(btn);
+  });
 }
 
 function getStatusChip(status) {
@@ -692,15 +629,9 @@ function escapeHtml(str) {
    ───────────────────────────────────────────────────────────── */
 function switchDay(dayIndex) {
   currentDay = dayIndex;
-
-  // Update tab styling
   document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
   document.querySelector(`.day-tab[data-day="${dayIndex}"]`).classList.add('active');
-
-  // Update day label with actual date
   updateDayLabel(dayIndex);
-
-  // Render cached data instantly (no fetch)
   if (allDaysData[dayIndex]) {
     renderDay(dayIndex);
   } else {
@@ -714,17 +645,9 @@ function switchDay(dayIndex) {
 /* ─────────────────────────────────────────────────────────────
    COLLAPSE / EXPAND
    ───────────────────────────────────────────────────────────── */
-function toggleSection(header) {
-  header.classList.toggle('collapsed');
-}
-
-function expandAll() {
-  document.querySelectorAll('.section-header').forEach(h => h.classList.remove('collapsed'));
-}
-
-function collapseAll() {
-  document.querySelectorAll('.section-header').forEach(h => h.classList.add('collapsed'));
-}
+function toggleSection(header) { header.classList.toggle('collapsed'); }
+function expandAll() { document.querySelectorAll('.section-header').forEach(h => h.classList.remove('collapsed')); }
+function collapseAll() { document.querySelectorAll('.section-header').forEach(h => h.classList.add('collapsed')); }
 
 /* ─────────────────────────────────────────────────────────────
    SEARCH
@@ -736,11 +659,8 @@ function applySearch() {
 
 function matchesSearch(driver) {
   if (!searchTerm) return true;
-  const searchable = [
-    driver.name, driver.terminal, driver.routeSummary,
-    driver.firstStopCity, driver.tripStatus
-  ].join(' ').toLowerCase();
-  return searchable.includes(searchTerm);
+  return [driver.name, driver.terminal, driver.routeSummary,
+    driver.firstStopCity, driver.tripStatus].join(' ').toLowerCase().includes(searchTerm);
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -757,6 +677,7 @@ window.addEventListener('scroll', () => {
    ───────────────────────────────────────────────────────────── */
 if (checkAuth()) {
   initApp();
+  setInterval(() => { if (!document.hidden) refreshData(); }, 300000);
 }
 </script>
 </body>
