@@ -5,17 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Norlo Dispatch Planning Grid</title>
 <style>
-/* ── Reset & Base ─────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background: #f2f2f2;
-  color: #222;
-  min-height: 100vh;
-  overflow-x: hidden;
+  background: #f2f2f2; color: #222; min-height: 100vh; overflow-x: hidden;
 }
-
-/* ── NORLO Header (dark green — brand consistency) ───────── */
 #norloHeader {
   position: sticky; top: 0; z-index: 100;
   background: #1a472a; border-bottom: 2px solid #2d7a3a;
@@ -23,25 +17,16 @@ body {
   display: flex; align-items: center; justify-content: space-between;
 }
 .header-left { display: flex; align-items: center; gap: 0.75rem; }
-.header-left h1 {
-  color: #fff; font-size: 1.1rem; font-weight: 700;
-  letter-spacing: 0.5px; white-space: nowrap;
-}
+.header-left h1 { color: #fff; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap; }
 .header-btn {
   background: #2d7a3a; border: 1px solid #4a9e5a; border-radius: 4px;
   color: #fff; padding: 0.35rem 0.7rem; font-size: 0.75rem;
-  cursor: pointer; font-weight: 600; text-decoration: none;
-  white-space: nowrap; transition: background 0.15s;
+  cursor: pointer; font-weight: 600; text-decoration: none; white-space: nowrap; transition: background 0.15s;
 }
 .header-btn:hover { background: #4a9e5a; }
 .header-right { display: flex; align-items: center; gap: 0.75rem; }
-#signOutBtn {
-  color: #b0d4b8; font-size: 0.75rem; cursor: pointer;
-  text-decoration: underline; background: none; border: none;
-}
+#signOutBtn { color: #b0d4b8; font-size: 0.75rem; cursor: pointer; text-decoration: underline; background: none; border: none; }
 #refreshBtn { font-size: 0.8rem; }
-
-/* ── Toolbar Bar ─────────────────────────────────────────── */
 #toolbarBar {
   position: sticky; top: 48px; z-index: 99;
   background: #fff; border-bottom: 2px solid #d0d0d0;
@@ -66,139 +51,104 @@ body {
 .jump-btn:hover { background: #3a6b1e; }
 #searchInput {
   background: #fff; border: 1px solid #bbb; border-radius: 4px;
-  color: #333; padding: 0.3rem 0.6rem; font-size: 0.75rem;
-  width: 180px;
+  color: #333; padding: 0.3rem 0.6rem; font-size: 0.75rem; width: 180px;
 }
 #searchInput:focus { outline: none; border-color: #1a472a; box-shadow: 0 0 0 2px rgba(26,71,42,0.15); }
 #driverCount { color: #777; font-size: 0.7rem; white-space: nowrap; }
-
-/* ── Day Label ───────────────────────────────────────────── */
 #dayLabel {
   text-align: center; padding: 0.5rem 1rem;
   color: #1a472a; font-size: 1rem; font-weight: 700;
   letter-spacing: 1px; text-transform: uppercase;
   background: #e8e8e8; border-bottom: 1px solid #d0d0d0;
 }
-
-/* ── Section (Terminal Group) ────────────────────────────── */
 .section-block {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 60px;
-  margin: 0.4rem 0.5rem;
-  scroll-margin-top: 100px;
+  content-visibility: auto; contain-intrinsic-size: auto 60px;
+  margin: 0.4rem 0.5rem; scroll-margin-top: 100px;
 }
 .section-header {
-  background: #ffd700;
-  border: 1px solid #e6c200; border-radius: 4px 4px 0 0;
+  background: #ffd700; border: 1px solid #e6c200; border-radius: 4px 4px 0 0;
   padding: 0.5rem 0.8rem; cursor: pointer;
   display: flex; align-items: center; justify-content: space-between;
   user-select: none; transition: background 0.15s;
 }
 .section-header:hover { background: #ffe033; }
 .section-header.collapsed { border-radius: 4px; }
-.section-title {
-  color: #333; font-size: 0.8rem; font-weight: 700;
-  letter-spacing: 0.5px; text-transform: uppercase;
-}
-.section-count {
-  color: rgba(0,0,0,0.5); font-size: 0.7rem; font-weight: 500;
-}
-.section-chevron {
-  color: rgba(0,0,0,0.4); font-size: 0.75rem; transition: transform 0.15s;
-}
+.section-title { color: #333; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+.section-count { color: rgba(0,0,0,0.5); font-size: 0.7rem; font-weight: 500; }
+.section-chevron { color: rgba(0,0,0,0.4); font-size: 0.75rem; transition: transform 0.15s; }
 .section-header.collapsed .section-chevron { transform: rotate(-90deg); }
 .section-body {
   border: 1px solid #ccc; border-top: none;
-  border-radius: 0 0 4px 4px; overflow: hidden;
-  background: #fff;
+  border-radius: 0 0 4px 4px; overflow: hidden; background: #fff;
 }
 .section-header.collapsed + .section-body { display: none; }
-/* ── Planning Grid Table ─────────────────────────────────── */
-.planning-table {
-  width: 100%; border-collapse: collapse; font-size: 0.75rem;
-  table-layout: fixed;
+
+/* ── Role Sub-Header (Local / OTR divider within a terminal) ─── */
+.role-subheader {
+  background: #3a6b1e; color: #fff; font-size: 0.7rem; font-weight: 700;
+  padding: 0.35rem 0.8rem; letter-spacing: 0.5px; text-transform: uppercase;
+  border-bottom: 1px solid #274e13;
 }
+
+/* ── Planning Grid Table ─────────────────────────────────── */
+.planning-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; table-layout: fixed; }
 .planning-table thead th {
   background: #274e13; color: #fff; font-weight: 600;
-  padding: 0.4rem 0.5rem; text-align: left; font-size: 0.6rem;
+  padding: 0.4rem 0.5rem; text-align: center; font-size: 0.6rem;
   letter-spacing: 0.5px; text-transform: uppercase;
   border-bottom: 2px solid #1a3a0d; white-space: nowrap;
   border-right: 1px solid #1a3a0d;
+  position: sticky; top: 88px; z-index: 10;
 }
 .planning-table thead th:last-child { border-right: none; }
-/* Column widths — 11 columns */
-.planning-table th:nth-child(1),
-.planning-table td:nth-child(1) { width: 140px; }    /* Driver */
-.planning-table th:nth-child(2),
-.planning-table td:nth-child(2) { width: 65px; }     /* Start */
-.planning-table th:nth-child(3),
-.planning-table td:nth-child(3) { width: 80px; }     /* Arr 1st */
-.planning-table th:nth-child(4),
-.planning-table td:nth-child(4) { width: 110px; }    /* City */
-/* Column 5 (Route) gets remaining space */
-.planning-table th:nth-child(6),
-.planning-table td:nth-child(6) { width: 50px; }     /* Truck */
-.planning-table th:nth-child(7),
-.planning-table td:nth-child(7) { width: 55px; }     /* Trailer */
-.planning-table th:nth-child(8),
-.planning-table td:nth-child(8) { width: 45px; }     /* LD/MT */
-.planning-table th:nth-child(9),
-.planning-table td:nth-child(9) { width: 90px; }     /* Phone */
-.planning-table th:nth-child(10),
-.planning-table td:nth-child(10) { width: 70px; }    /* Trip Status */
-.planning-table th:nth-child(11),
-.planning-table td:nth-child(11) { width: 58px; }    /* Confirm */
-
-/* Column background accents — full stripe down */
-.planning-table td:nth-child(1) { background: #e6eed9; }   /* driver — green */
-.planning-table td:nth-child(2) { background: #fef9e0; }   /* start — yellow */
-.planning-table td:nth-child(3) { background: #fef9e0; }   /* arr 1st — yellow */
-.planning-table td:nth-child(4) { background: #e6eed9; }   /* city — green */
-.planning-table td:nth-child(5) { background: #fff; }      /* route — white */
-.planning-table td:nth-child(6) { background: #e6eed9; }   /* truck — green */
-.planning-table td:nth-child(7) { background: #e6eed9; }   /* trailer — green */
-.planning-table td:nth-child(8) { background: #fef9e0; }   /* ld/mt — yellow */
-.planning-table td:nth-child(9) { background: #e6eed9; }   /* phone — green */
-.planning-table td:nth-child(10) { background: #f5f0e0; }  /* status — cream */
-.planning-table td:nth-child(11) { background: #e6eed9; }  /* confirm — green */
-
-.planning-table tbody tr {
-  border-bottom: 1px solid #d0d0d0; transition: background 0.1s;
-}
+.planning-table th:nth-child(1), .planning-table td:nth-child(1) { width: 140px; }
+.planning-table th:nth-child(2), .planning-table td:nth-child(2) { width: 65px; }
+.planning-table th:nth-child(3), .planning-table td:nth-child(3) { width: 80px; }
+.planning-table th:nth-child(4), .planning-table td:nth-child(4) { width: 110px; }
+.planning-table th:nth-child(6), .planning-table td:nth-child(6) { width: 50px; }
+.planning-table th:nth-child(7), .planning-table td:nth-child(7) { width: 55px; }
+.planning-table th:nth-child(8), .planning-table td:nth-child(8) { width: 45px; }
+.planning-table th:nth-child(9), .planning-table td:nth-child(9) { width: 90px; }
+.planning-table th:nth-child(10), .planning-table td:nth-child(10) { width: 70px; }
+.planning-table th:nth-child(11), .planning-table td:nth-child(11) { width: 58px; }
+.planning-table td:nth-child(1) { background: #e6eed9; }
+.planning-table td:nth-child(2) { background: #fef9e0; }
+.planning-table td:nth-child(3) { background: #fef9e0; }
+.planning-table td:nth-child(4) { background: #e6eed9; }
+.planning-table td:nth-child(5) { background: #fff; }
+.planning-table td:nth-child(6) { background: #e6eed9; }
+.planning-table td:nth-child(7) { background: #e6eed9; }
+.planning-table td:nth-child(8) { background: #fef9e0; }
+.planning-table td:nth-child(9) { background: #e6eed9; }
+.planning-table td:nth-child(10) { background: #f5f0e0; }
+.planning-table td:nth-child(11) { background: #e6eed9; }
+.planning-table tbody tr { border-bottom: 1px solid #d0d0d0; transition: background 0.1s; }
 .planning-table tbody tr:hover td { filter: brightness(0.95); }
 .planning-table td {
   padding: 0.4rem 0.5rem; vertical-align: middle;
-  color: #333; white-space: nowrap; overflow: hidden;
-  text-overflow: ellipsis;
-  border-right: 1px solid #d0d0d0;
+  color: #222; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  border-right: 1px solid #d0d0d0; text-align: center; font-weight: 600;
 }
 .planning-table td:last-child { border-right: none; }
-.planning-table td { text-align: center; font-weight: 600; color: #222; }
-.planning-table td.driver-name {
-  color: #111; font-weight: 600; text-align: left; font-size: 0.85rem;
-}
+.planning-table td.driver-name { color: #111; font-weight: 600; text-align: left; font-size: 0.85rem; }
 .planning-table td.route-summary {
-  color: #555; font-size: 0.7rem;
+  color: #555; font-size: 0.7rem; text-align: left;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-
-/* ── Status Chips ────────────────────────────────────────── */
-.chip {
-  display: inline-block; padding: 0.15rem 0.4rem; border-radius: 3px;
-  font-size: 0.65rem; font-weight: 600; letter-spacing: 0.3px;
+.planning-table td.role-subheader-cell {
+  background: #3a6b1e !important; color: #fff; font-size: 0.7rem; font-weight: 700;
+  padding: 0.35rem 0.8rem; letter-spacing: 0.5px; text-transform: uppercase;
+  text-align: left; border-right: none;
 }
+.chip { display: inline-block; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.3px; }
 .chip-dispatched { background: #d4edda; color: #155724; }
 .chip-off { background: #f8d7da; color: #721c24; }
 .chip-empty { background: #d1ecf1; color: #0c5460; }
 .chip-loaded { background: #fff3cd; color: #856404; }
 .chip-pending { background: #e9e9e9; color: #666; }
 .chip-confirmed { background: #c3e6cb; color: #155724; }
-
-/* ── OFF / Out Row ───────────────────────────────────────── */
 tr.driver-off { opacity: 0.45; }
 tr.driver-off td { color: #999; }
-
-/* ── Bottom Day Tabs (Google Sheets style) ───────────────── */
 #dayTabBar {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
   background: #e8e8e8; border-top: 2px solid #bbb;
@@ -206,61 +156,28 @@ tr.driver-off td { color: #999; }
   overflow-x: auto; -webkit-overflow-scrolling: touch;
 }
 .day-tab {
-  flex: 1; min-width: 0;
-  display: flex; align-items: center; justify-content: center;
+  flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center;
   padding: 0 0.5rem; font-size: 0.75rem; font-weight: 600;
   color: #555; background: #e0e0e0; border: none;
-  border-right: 1px solid #ccc; cursor: pointer;
-  transition: all 0.15s; white-space: nowrap;
-  position: relative;
+  border-right: 1px solid #ccc; cursor: pointer; transition: all 0.15s; white-space: nowrap; position: relative;
 }
 .day-tab:last-child { border-right: none; }
 .day-tab:hover { background: #d0d0d0; color: #333; }
-.day-tab.active {
-  background: #fff; color: #1a472a;
-  border-top: 3px solid #f0a500;
-  font-weight: 700;
-}
-.day-tab.today::after {
-  content: ''; position: absolute; bottom: 4px;
-  width: 5px; height: 5px; border-radius: 50%;
-  background: #f0a500;
-}
-
-/* ── Content Padding for Fixed Bottom Bar ────────────────── */
+.day-tab.active { background: #fff; color: #1a472a; border-top: 3px solid #f0a500; font-weight: 700; }
+.day-tab.today::after { content: ''; position: absolute; bottom: 4px; width: 5px; height: 5px; border-radius: 50%; background: #f0a500; }
 #mainContent { padding-bottom: 50px; }
-
-/* ── Loading State ───────────────────────────────────────── */
-#loadingOverlay {
-  text-align: center; padding: 3rem 1rem; color: #888;
-  font-size: 0.85rem;
-}
-.spinner {
-  display: inline-block; width: 24px; height: 24px;
-  border: 3px solid #ccc; border-top-color: #1a472a;
-  border-radius: 50%; animation: spin 0.8s linear infinite;
-  margin-bottom: 0.5rem;
-}
+#loadingOverlay { text-align: center; padding: 3rem 1rem; color: #888; font-size: 0.85rem; }
+.spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid #ccc; border-top-color: #1a472a; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 0.5rem; }
 @keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── Back to Top ─────────────────────────────────────────── */
 #backToTop {
   position: fixed; bottom: 50px; right: 12px; z-index: 90;
   background: #1a472a; border: 1px solid #2d7a3a; border-radius: 20px;
   color: #fff; padding: 0.3rem 0.7rem; font-size: 0.7rem;
   font-weight: 700; cursor: pointer; display: none;
-  font-family: monospace; text-transform: uppercase;
-  letter-spacing: 1px;
+  font-family: monospace; text-transform: uppercase; letter-spacing: 1px;
 }
 #backToTop.visible { display: block; }
-
-/* ── Empty State ─────────────────────────────────────────── */
-.empty-day {
-  text-align: center; padding: 3rem 1rem; color: #888;
-  font-size: 0.85rem; background: #fff;
-}
-
-/* ── Responsive ──────────────────────────────────────────── */
+.empty-day { text-align: center; padding: 3rem 1rem; color: #888; font-size: 0.85rem; background: #fff; }
 @media (max-width: 768px) {
   .day-tab { font-size: 0.65rem; padding: 0 0.3rem; }
   .planning-table td { font-size: 0.7rem; padding: 0.3rem; }
@@ -269,61 +186,40 @@ tr.driver-off td { color: #999; }
 </style>
 </head>
 <body>
-
-<!-- ═══ NORLO HEADER ═══ -->
 <div id="norloHeader">
   <div class="header-left">
     <h1>Dispatch Planning Grid</h1>
-    <a href="index.html" class="header-btn">← Driver Board</a>
+    <a href="index.html" class="header-btn">&larr; Driver Board</a>
   </div>
   <div class="header-right">
-    <button id="refreshBtn" class="header-btn" onclick="refreshData()">↻ Refresh</button>
+    <button id="refreshBtn" class="header-btn" onclick="refreshData()">&#x21bb; Refresh</button>
     <button id="signOutBtn" onclick="signOut()">Sign out</button>
   </div>
 </div>
-
-<!-- ═══ TOOLBAR ═══ -->
 <div id="toolbarBar">
   <div class="toolbar-left">
     <button class="toolbar-btn" onclick="expandAll()">+ Expand All</button>
-    <button class="toolbar-btn" onclick="collapseAll()">− Collapse All</button>
+    <button class="toolbar-btn" onclick="collapseAll()">&minus; Collapse All</button>
     <span id="driverCount"></span>
   </div>
   <div class="toolbar-center" id="terminalJumpBar"></div>
   <div class="toolbar-right">
-    <input type="text" id="searchInput" placeholder="⌕ Search drivers…" oninput="applySearch()">
+    <input type="text" id="searchInput" placeholder="&#x2315; Search drivers&hellip;" oninput="applySearch()">
   </div>
 </div>
-
-<!-- ═══ DAY LABEL ═══ -->
 <div id="dayLabel">Sunday</div>
-
-<!-- ═══ MAIN CONTENT ═══ -->
 <div id="mainContent">
-  <div id="loadingOverlay">
-    <div class="spinner"></div>
-    <div>Loading planning data…</div>
-  </div>
+  <div id="loadingOverlay"><div class="spinner"></div><div>Loading planning data&hellip;</div></div>
   <div id="gridContainer"></div>
 </div>
-
-<!-- ═══ BOTTOM DAY TABS (built dynamically by JS) ═══ -->
 <div id="dayTabBar"></div>
-
-<!-- ═══ BACK TO TOP ═══ -->
-<button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑ Top</button>
+<button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">&uarr; Top</button>
 
 <script>
-/* ─────────────────────────────────────────────────────────────
-   CONFIG
-   ───────────────────────────────────────────────────────────── */
 const PLANNING_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwHh7gHEFs9TFFxAhspSC22jCTKnO65eo2son0Cq8SiU9JsuWXa1PnCXrD8--nhdxv8mw/exec';
 const API_TOKEN = 'norlo-planning-2026';
-
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-/* Planning TMW Data sheet columns (positional) */
+const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const DAY_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const COLUMNS = [
   'RoleBucket','EquipClass','TerminalName','TerminalOrder','DriverID','DriverName',
   'OrderNumber','EventCode','StopCompany','City','State','ZipCode',
@@ -333,96 +229,54 @@ const COLUMNS = [
   'OrdCharge','OrdAccessorial','OrdTotalCharge'
 ];
 
-/* ─────────────────────────────────────────────────────────────
-   STATE
-   ───────────────────────────────────────────────────────────── */
 let allDaysData = {};
 let currentDay = 0;
 let searchTerm = '';
 
-/* ─────────────────────────────────────────────────────────────
-   AUTH
-   ───────────────────────────────────────────────────────────── */
-function signOut() {
-  sessionStorage.removeItem('norlo_auth');
-  window.location.href = 'index.html';
-}
-
+function signOut() { sessionStorage.removeItem('norlo_auth'); window.location.href = 'index.html'; }
 function checkAuth() {
   if (sessionStorage.getItem('norlo_auth') === '1') return true;
-  window.location.href = 'index.html';
-  return false;
+  window.location.href = 'index.html'; return false;
 }
-
-/* ─────────────────────────────────────────────────────────────
-   INIT
-   ───────────────────────────────────────────────────────────── */
-function initApp() {
-  buildDayTabs();
-  loadAllDays();
-}
-
+function initApp() { buildDayTabs(); loadAllDays(); }
 function buildDayTabs() {
-  const bar = document.getElementById('dayTabBar');
-  const today = new Date();
-  bar.innerHTML = '';
+  const bar = document.getElementById('dayTabBar'); const today = new Date(); bar.innerHTML = '';
   for (let i = 0; i < 7; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() + i);
-    const label = `${DAY_SHORT[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}`;
+    const d = new Date(today); d.setDate(d.getDate() + i);
     const btn = document.createElement('button');
     btn.className = 'day-tab' + (i === 0 ? ' active today' : '');
     btn.dataset.day = i;
-    btn.textContent = label;
+    btn.textContent = DAY_SHORT[d.getDay()] + ' ' + (d.getMonth()+1) + '/' + d.getDate();
     btn.onclick = () => switchDay(i);
     bar.appendChild(btn);
   }
-  currentDay = 0;
-  updateDayLabel(0);
+  currentDay = 0; updateDayLabel(0);
+}
+function updateDayLabel(di) {
+  const d = new Date(); d.setDate(d.getDate() + di);
+  document.getElementById('dayLabel').textContent = DAY_NAMES[d.getDay()] + ' ' + (d.getMonth()+1) + '/' + d.getDate();
 }
 
-function updateDayLabel(dayIndex) {
-  const d = new Date();
-  d.setDate(d.getDate() + dayIndex);
-  document.getElementById('dayLabel').textContent =
-    `${DAY_NAMES[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}`;
-}
-
-/* ─────────────────────────────────────────────────────────────
-   DATA FETCHING
-   ───────────────────────────────────────────────────────────── */
 async function loadAllDays() {
   const loading = document.getElementById('loadingOverlay');
   loading.style.display = 'block';
   document.getElementById('gridContainer').innerHTML = '';
   try {
-    const url = `${PLANNING_SCRIPT_URL}?token=${encodeURIComponent(API_TOKEN)}&action=readAllDays`;
-    const resp = await fetch(url);
+    const resp = await fetch(PLANNING_SCRIPT_URL + '?token=' + encodeURIComponent(API_TOKEN) + '&action=readAllDays');
     const data = await resp.json();
     if (data.error) throw new Error(data.error);
-    for (let d = 0; d < 7; d++) {
-      allDaysData[d] = parseDay((data.days && data.days[d]) || []);
-    }
+    for (let d = 0; d < 7; d++) allDaysData[d] = parseDay((data.days && data.days[d]) || []);
     loading.style.display = 'none';
     renderDay(currentDay);
   } catch (err) {
-    loading.innerHTML = `<div style="color:#c00;">Error loading data: ${err.message}</div>`;
+    loading.innerHTML = '<div style="color:#c00;">Error: ' + err.message + '</div>';
   }
 }
+function refreshData() { allDaysData = {}; loadAllDays(); }
 
-function refreshData() {
-  allDaysData = {};
-  loadAllDays();
-}
-
-/* ─────────────────────────────────────────────────────────────
-   PARSE
-   ───────────────────────────────────────────────────────────── */
 function parseDay(rows) {
   const records = rows.map(row => {
-    const rec = {};
-    COLUMNS.forEach((col, i) => rec[col] = row[i] || '');
-    return rec;
+    const rec = {}; COLUMNS.forEach((col, i) => rec[col] = row[i] || ''); return rec;
   });
   const driverMap = {};
   records.forEach(rec => {
@@ -432,12 +286,9 @@ function parseDay(rows) {
     if (id === 'STIST') return;
     if (!driverMap[id]) {
       driverMap[id] = {
-        id, name: rec.DriverName,
-        terminal: rec.TerminalName,
+        id, name: rec.DriverName, terminal: rec.TerminalName,
         terminalOrder: parseInt(rec.TerminalOrder) || 999,
-        roleBucket: rec.RoleBucket,
-        equipClass: rec.EquipClass,
-        stops: [],
+        roleBucket: rec.RoleBucket, equipClass: rec.EquipClass, stops: [],
       };
     }
     driverMap[id].stops.push(rec);
@@ -445,240 +296,162 @@ function parseDay(rows) {
 
   Object.values(driverMap).forEach(d => {
     d.stops.sort((a, b) => (parseInt(a.StopSeq) || 0) - (parseInt(b.StopSeq) || 0));
-    d.firstStopCity = '';
-    d.firstStopArrival = '';
-    d.routeSummary = '';
-    d.tripStatus = '';
-
+    d.firstStopCity = ''; d.firstStopArrival = ''; d.routeSummary = ''; d.tripStatus = '';
     const realStops = d.stops.filter(s => s.EventCode && !s.EventCode.includes('BMT') && !s.EventCode.includes('RTP'));
     if (realStops.length > 0) {
       d.firstStopCity = realStops[0].City + (realStops[0].State ? ', ' + realStops[0].State : '');
       d.firstStopArrival = formatTime(realStops[0].Arrival);
     }
-
-    const cities = [];
-    d.stops.forEach(s => { if (s.City && !cities.includes(s.City)) cities.push(s.City); });
-    d.routeSummary = cities.join(' → ');
-
+    const cities = []; d.stops.forEach(s => { if (s.City && !cities.includes(s.City)) cities.push(s.City); });
+    d.routeSummary = cities.join(' \u2192 ');
     const orderStops = d.stops.filter(s => s.OrderNumber && s.OrderNumber !== '0');
     if (orderStops.length > 0) {
-      const status = orderStops[0].OrderStatus;
-      d.tripStatus = status === 'CMP' ? 'Completed' :
-                     status === 'DSP' ? 'Dispatched' :
-                     status === 'STD' ? 'Started' :
-                     status === 'PLN' ? 'Planned' : status || '';
+      const st = orderStops[0].OrderStatus;
+      d.tripStatus = st === 'CMP' ? 'Completed' : st === 'DSP' ? 'Dispatched' : st === 'STD' ? 'Started' : st === 'PLN' ? 'Planned' : st || '';
     }
-
-    d.startTime = formatTime(d.stops[0]?.DepartedFromYard) || '';
-    if (!d.firstStopArrival && d.stops.length > 0) {
-      d.firstStopArrival = formatTime(d.stops[0]?.Arrival) || '';
-    }
+    d.startTime = formatTime(d.stops[0] && d.stops[0].DepartedFromYard) || '';
+    if (!d.firstStopArrival && d.stops.length > 0) d.firstStopArrival = formatTime(d.stops[0].Arrival) || '';
   });
 
-const drivers = Object.values(driverMap);
+  // Group by terminal, then split LOCAL vs OTR within each
+  const drivers = Object.values(driverMap);
   const terminalGroups = {};
   drivers.forEach(d => {
     const t = d.terminal || 'UNKNOWN';
-    if (!terminalGroups[t]) terminalGroups[t] = { terminal: t, order: d.terminalOrder, drivers: [] };
-    terminalGroups[t].drivers.push(d);
+    if (!terminalGroups[t]) terminalGroups[t] = { terminal: t, order: d.terminalOrder, local: [], otr: [] };
+    if (d.roleBucket === 'LOCAL DV') terminalGroups[t].local.push(d);
+    else terminalGroups[t].otr.push(d);
   });
   const sections = Object.values(terminalGroups).sort((a, b) => a.order - b.order);
-  sections.forEach(s => s.drivers.sort((a, b) => a.name.localeCompare(b.name)));
+  sections.forEach(s => {
+    s.local.sort((a, b) => a.name.localeCompare(b.name));
+    s.otr.sort((a, b) => a.name.localeCompare(b.name));
+    s.totalDrivers = s.local.length + s.otr.length;
+  });
   return { sections, driverCount: drivers.length };
 }
 
 function formatTime(dateStr) {
   if (!dateStr) return '';
-  try {
-    const d = new Date(dateStr);
-    if (isNaN(d)) return '';
-    let h = d.getHours(), m = d.getMinutes();
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    h = h % 12 || 12;
-    return `${h}:${String(m).padStart(2,'0')} ${ampm}`;
-  } catch { return ''; }
+  try { const d = new Date(dateStr); if (isNaN(d)) return ''; let h = d.getHours(), m = d.getMinutes(); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return h + ':' + String(m).padStart(2,'0') + ' ' + ap; } catch { return ''; }
 }
-
 function formatDriverName(raw) {
   if (!raw) return '';
-  const parts = raw.split(',');
-  if (parts.length < 2) return raw;
-  const last = parts[0].trim(), first = parts[1].trim();
+  const p = raw.split(','); if (p.length < 2) return raw;
   const cap = s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
-  return cap(last) + ', ' + cap(first);
+  return cap(p[0].trim()) + ', ' + cap(p[1].trim());
 }
 
-/* ─────────────────────────────────────────────────────────────
-   RENDER
-   ───────────────────────────────────────────────────────────── */
 function renderDay(dayIndex) {
   const container = document.getElementById('gridContainer');
   const data = allDaysData[dayIndex];
-
   if (!data || data.sections.length === 0) {
-    const d = new Date();
-    d.setDate(d.getDate() + dayIndex);
-    container.innerHTML = `<div class="empty-day">No dispatched drivers for ${DAY_NAMES[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}</div>`;
-    updateDriverCount(0);
-    document.getElementById('terminalJumpBar').innerHTML = '';
-    return;
+    const d = new Date(); d.setDate(d.getDate() + dayIndex);
+    container.innerHTML = '<div class="empty-day">No drivers for ' + DAY_NAMES[d.getDay()] + ' ' + (d.getMonth()+1) + '/' + d.getDate() + '</div>';
+    updateDriverCount(0); document.getElementById('terminalJumpBar').innerHTML = ''; return;
   }
+
+  const TH_ROW = '<thead><tr><th>Driver</th><th>Start</th><th>Arr. 1st</th><th>City</th><th>Route Summary</th><th>Truck</th><th>Trailer</th><th>LD/MT</th><th>Phone</th><th>Status</th><th>Confirm</th></tr></thead>';
 
   let html = '';
   let totalDrivers = 0;
 
-data.sections.forEach((section) => {
-    const filteredDrivers = searchTerm
-      ? section.drivers.filter(d => matchesSearch(d))
-      : section.drivers;
-    if (filteredDrivers.length === 0) return;
-    totalDrivers += filteredDrivers.length;
+  data.sections.forEach(section => {
+    // Filter for search
+    const filteredLocal = searchTerm ? section.local.filter(d => matchesSearch(d)) : section.local;
+    const filteredOtr = searchTerm ? section.otr.filter(d => matchesSearch(d)) : section.otr;
+    const sectionTotal = filteredLocal.length + filteredOtr.length;
+    if (sectionTotal === 0) return;
+    totalDrivers += sectionTotal;
 
-    html += `
-      <div class="section-block">
-        <div class="section-header" onclick="toggleSection(this)">
-          <span class="section-title">${section.terminal}</span>
-          <span>
-            <span class="section-count">${filteredDrivers.length} driver${filteredDrivers.length !== 1 ? 's' : ''}</span>
-            <span class="section-chevron">▼</span>
-          </span>
-        </div>
-        <div class="section-body">
-          <table class="planning-table">
-            <thead>
-              <tr>
-                <th>Driver</th>
-                <th>Start</th>
-                <th>Arr. 1st</th>
-                <th>City</th>
-                <th>Route Summary</th>
-                <th>Truck</th>
-                <th>Trailer</th>
-                <th>LD/MT</th>
-                <th>Phone</th>
-                <th>Status</th>
-                <th>Confirm</th>
-              </tr>
-            </thead>
-            <tbody>`;
+    html += '<div class="section-block">';
+    html += '<div class="section-header" onclick="toggleSection(this)">';
+    html += '<span class="section-title">' + section.terminal + '</span>';
+    html += '<span><span class="section-count">' + sectionTotal + ' driver' + (sectionTotal !== 1 ? 's' : '') + '</span> <span class="section-chevron">\u25BC</span></span>';
+    html += '</div>';
+    html += '<div class="section-body">';
+    html += '<table class="planning-table">' + TH_ROW + '<tbody>';
 
-    filteredDrivers.forEach(d => {
-      const statusChip = getStatusChip(d.tripStatus);
-      html += `
-              <tr>
-                <td class="driver-name">${formatDriverName(d.name)}</td>
-                <td>${d.startTime}</td>
-                <td>${d.firstStopArrival}</td>
-                <td>${d.firstStopCity}</td>
-                <td class="route-summary" title="${escapeHtml(d.routeSummary)}">${d.routeSummary}</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td>${statusChip}</td>
-                <td></td>
-              </tr>`;
-    });
+    // LOCAL sub-header + rows
+    if (filteredLocal.length > 0) {
+      html += '<tr><td colspan="11" class="role-subheader-cell">' + section.terminal + ' - Local</td></tr>';
+      filteredLocal.forEach(d => { html += driverRow(d); });
+    }
 
-    html += `
-            </tbody>
-          </table>
-        </div>
-      </div>`;
+    // OTR sub-header + rows
+    if (filteredOtr.length > 0) {
+      html += '<tr><td colspan="11" class="role-subheader-cell">' + section.terminal + ' - OTR</td></tr>';
+      filteredOtr.forEach(d => { html += driverRow(d); });
+    }
+
+    html += '</tbody></table></div></div>';
   });
 
   container.innerHTML = html;
   updateDriverCount(totalDrivers);
   window.scrollTo({ top: 0 });
 
-  // Build terminal jump buttons
+  // Terminal jump buttons
   const jumpBar = document.getElementById('terminalJumpBar');
   const blocks = container.querySelectorAll('.section-block');
   jumpBar.innerHTML = '';
   blocks.forEach(s => {
     const name = s.querySelector('.section-title').textContent;
     const btn = document.createElement('button');
-    btn.className = 'jump-btn';
-    btn.textContent = name;
+    btn.className = 'jump-btn'; btn.textContent = name;
     btn.onclick = () => s.scrollIntoView({ behavior: 'smooth', block: 'start' });
     jumpBar.appendChild(btn);
   });
 }
 
+function driverRow(d) {
+  const chip = getStatusChip(d.tripStatus);
+  return '<tr>' +
+    '<td class="driver-name">' + formatDriverName(d.name) + '</td>' +
+    '<td>' + d.startTime + '</td>' +
+    '<td>' + d.firstStopArrival + '</td>' +
+    '<td>' + d.firstStopCity + '</td>' +
+    '<td class="route-summary" title="' + escapeHtml(d.routeSummary) + '">' + d.routeSummary + '</td>' +
+    '<td></td><td></td><td></td><td></td>' +
+    '<td>' + chip + '</td>' +
+    '<td></td></tr>';
+}
+
 function getStatusChip(status) {
-  if (!status) return '<span class="chip chip-pending">—</span>';
+  if (!status) return '<span class="chip chip-pending">\u2014</span>';
   const s = status.toLowerCase();
   if (s === 'dispatched') return '<span class="chip chip-dispatched">Dispatched</span>';
   if (s === 'completed') return '<span class="chip chip-dispatched">Completed</span>';
   if (s === 'started') return '<span class="chip chip-dispatched">Started</span>';
   if (s === 'planned') return '<span class="chip chip-pending">Planned</span>';
-  return `<span class="chip chip-pending">${escapeHtml(status)}</span>`;
+  return '<span class="chip chip-pending">' + escapeHtml(status) + '</span>';
 }
+function updateDriverCount(n) { document.getElementById('driverCount').textContent = n + ' driver' + (n !== 1 ? 's' : ''); }
+function escapeHtml(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
 
-function updateDriverCount(n) {
-  document.getElementById('driverCount').textContent = `${n} driver${n !== 1 ? 's' : ''}`;
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-/* ─────────────────────────────────────────────────────────────
-   DAY TABS
-   ───────────────────────────────────────────────────────────── */
-function switchDay(dayIndex) {
-  currentDay = dayIndex;
+function switchDay(di) {
+  currentDay = di;
   document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
-  document.querySelector(`.day-tab[data-day="${dayIndex}"]`).classList.add('active');
-  updateDayLabel(dayIndex);
-  if (allDaysData[dayIndex]) {
-    renderDay(dayIndex);
-  } else {
-    const d = new Date();
-    d.setDate(d.getDate() + dayIndex);
-    document.getElementById('gridContainer').innerHTML =
-      `<div class="empty-day">No data loaded for ${DAY_NAMES[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}</div>`;
-  }
+  document.querySelector('.day-tab[data-day="' + di + '"]').classList.add('active');
+  updateDayLabel(di);
+  if (allDaysData[di]) renderDay(di);
+  else { const d = new Date(); d.setDate(d.getDate() + di);
+    document.getElementById('gridContainer').innerHTML = '<div class="empty-day">No data for ' + DAY_NAMES[d.getDay()] + ' ' + (d.getMonth()+1) + '/' + d.getDate() + '</div>'; }
 }
-
-/* ─────────────────────────────────────────────────────────────
-   COLLAPSE / EXPAND
-   ───────────────────────────────────────────────────────────── */
-function toggleSection(header) { header.classList.toggle('collapsed'); }
+function toggleSection(h) { h.classList.toggle('collapsed'); }
 function expandAll() { document.querySelectorAll('.section-header').forEach(h => h.classList.remove('collapsed')); }
 function collapseAll() { document.querySelectorAll('.section-header').forEach(h => h.classList.add('collapsed')); }
-
-/* ─────────────────────────────────────────────────────────────
-   SEARCH
-   ───────────────────────────────────────────────────────────── */
-function applySearch() {
-  searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
-  renderDay(currentDay);
-}
-
-function matchesSearch(driver) {
+function applySearch() { searchTerm = document.getElementById('searchInput').value.trim().toLowerCase(); renderDay(currentDay); }
+function matchesSearch(d) {
   if (!searchTerm) return true;
-  return [driver.name, driver.terminal, driver.routeSummary,
-    driver.firstStopCity, driver.tripStatus].join(' ').toLowerCase().includes(searchTerm);
+  return [d.name, d.terminal, d.routeSummary, d.firstStopCity, d.tripStatus].join(' ').toLowerCase().includes(searchTerm);
 }
-
-/* ─────────────────────────────────────────────────────────────
-   BACK TO TOP
-   ───────────────────────────────────────────────────────────── */
 window.addEventListener('scroll', () => {
   const btn = document.getElementById('backToTop');
-  if (window.scrollY > 400) btn.classList.add('visible');
-  else btn.classList.remove('visible');
+  if (window.scrollY > 400) btn.classList.add('visible'); else btn.classList.remove('visible');
 }, { passive: true });
 
-/* ─────────────────────────────────────────────────────────────
-   BOOT
-   ───────────────────────────────────────────────────────────── */
-if (checkAuth()) {
-  initApp();
-  setInterval(() => { if (!document.hidden) refreshData(); }, 300000);
-}
+if (checkAuth()) { initApp(); setInterval(() => { if (!document.hidden) refreshData(); }, 300000); }
 </script>
 </body>
 </html>
