@@ -270,8 +270,7 @@ async function loadAllDays() {
     loading.innerHTML = '<div style="color:#c00;">Error: ' + err.message + '</div>';
   }
 }
-function refreshData() { const keepDay = currentDay; allDaysData = {}; loadAllDays().then(() => switchDay(keepDay)); }
-  
+function refreshData() { const keepDay = currentDay; const keepScroll = window.scrollY; allDaysData = {}; loadAllDays().then(() => { switchDay(keepDay); window.scrollTo({ top: keepScroll }); }); }  
 function parseDay(rows) {
   const records = rows.map(row => {
     const rec = {}; COLUMNS.forEach((col, i) => rec[col] = row[i] || ''); return rec;
@@ -390,7 +389,6 @@ function renderDay(dayIndex) {
 
   container.innerHTML = html;
   updateDriverCount(totalDrivers);
-  window.scrollTo({ top: 0 });
 
   // Terminal jump buttons
   const jumpBar = document.getElementById('terminalJumpBar');
