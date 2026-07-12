@@ -114,6 +114,12 @@ body {
 }
 .section-header.collapsed + .section-body { display: none; }
 
+/* ── Role Group Header (LOCAL / OTR divider) ─────────────── */
+.role-header {
+  background: #1a472a; color: #fff; font-size: 0.9rem; font-weight: 700;
+  padding: 0.6rem 1rem; margin: 0.8rem 0.5rem 0.2rem;
+  border-radius: 4px; letter-spacing: 1px; text-transform: uppercase;
+}
 /* ── Planning Grid Table ─────────────────────────────────── */
 .planning-table {
   width: 100%; border-collapse: collapse; font-size: 0.75rem;
@@ -476,14 +482,23 @@ function parseDay(rows) {
     }
   });
 
-  const drivers = Object.values(driverMap);
-  const terminalGroups = {};
+const drivers = Object.values(driverMap);
+  const roleTerminalGroups = {};
   drivers.forEach(d => {
-    const t = d.terminal || 'UNKNOWN';
-    if (!terminalGroups[t]) terminalGroups[t] = { terminal: t, order: d.terminalOrder, drivers: [] };
-    terminalGroups[t].drivers.push(d);
+    const role = d.roleBucket === 'LOCAL DV' ? 'LOCAL' : 'OTR';
+    const key = role + '|' + (d.terminal || 'UNKNOWN');
+    if (!roleTerminalGroups[key]) {
+      roleTerminalGroups[key] = {
+        role: role, terminal: d.terminal || 'UNKNOWN',
+        order: d.terminalOrder,
+        roleOrder: role === 'LOCAL' ? 1 : 2,
+        drivers: []
+      };
+    }
+    roleTerminalGroups[key].drivers.push(d);
   });
-  const sections = Object.values(terminalGroups).sort((a, b) => a.order - b.order);
+  const sections = Object.values(roleTerminalGroups)
+    .sort((a, b) => a.roleOrder - b.roleOrder || a.order - b.order);
   sections.forEach(s => s.drivers.sort((a, b) => a.name.localeCompare(b.name)));
   return { sections, driverCount: drivers.length };
 }
@@ -528,12 +543,18 @@ function renderDay(dayIndex) {
   let html = '';
   let totalDrivers = 0;
 
+let currentRole = '';
   data.sections.forEach((section) => {
     const filteredDrivers = searchTerm
       ? section.drivers.filter(d => matchesSearch(d))
       : section.drivers;
     if (filteredDrivers.length === 0) return;
     totalDrivers += filteredDrivers.length;
+
+    if (section.role !== currentRole) {
+      currentRole = section.role;
+      html += `<div class="role-header">${currentRole} DRIVERS</div>`;
+    }
 
     html += `
       <div class="section-block">
