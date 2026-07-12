@@ -92,7 +92,7 @@ body {
 
 /* ── Planning Grid Table ─────────────────────────────────── */
 .planning-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; table-layout: fixed; }
-.planning-table thead th {
+.planning-table th {
   background: #274e13; color: #fff; font-weight: 600;
   padding: 0.4rem 0.5rem; text-align: center; font-size: 0.6rem;
   letter-spacing: 0.5px; text-transform: uppercase;
@@ -307,7 +307,7 @@ function parseDay(rows) {
       const st = orderStops[0].OrderStatus;
       d.tripStatus = st === 'CMP' ? 'Completed' : st === 'DSP' ? 'Dispatched' : st === 'STD' ? 'Started' : st === 'PLN' ? 'Planned' : st || '';
     }
-    d.startTime = formatTime(d.stops[0] && d.stops[0].DepartedFromYard) || '';
+    d.startTime = formatTime(d.stops[0] && d.stops[0].Arrival) || '';    
     d.truck = '';
     d.stops.forEach(s => { if (s.Tractor && s.Tractor !== 'UNKNOWN' && !d.truck) d.truck = s.Tractor; });    if (!d.firstStopArrival && d.stops.length > 0) d.firstStopArrival = formatTime(d.stops[0].Arrival) || '';
   });
@@ -372,14 +372,16 @@ function renderDay(dayIndex) {
     html += '<table class="planning-table">' + TH_ROW + '<tbody>';
 
     // LOCAL sub-header + rows
-    if (filteredLocal.length > 0) {
+  if (filteredLocal.length > 0) {
       html += '<tr><td colspan="11" class="role-subheader-cell">' + section.terminal + ' - Local</td></tr>';
+      html += '<tr><th>Driver</th><th>Start</th><th>Arr. 1st</th><th>City</th><th>Route Summary</th><th>Truck</th><th>Trailer</th><th>LD/MT</th><th>Phone</th><th>Status</th><th>Confirm</th></tr>';
       filteredLocal.forEach(d => { html += driverRow(d); });
     }
 
     // OTR sub-header + rows
     if (filteredOtr.length > 0) {
       html += '<tr><td colspan="11" class="role-subheader-cell">' + section.terminal + ' - OTR</td></tr>';
+      html += '<tr><th>Driver</th><th>Start</th><th>Arr. 1st</th><th>City</th><th>Route Summary</th><th>Truck</th><th>Trailer</th><th>LD/MT</th><th>Phone</th><th>Status</th><th>Confirm</th></tr>';
       filteredOtr.forEach(d => { html += driverRow(d); });
     }
 
