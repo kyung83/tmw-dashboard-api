@@ -363,8 +363,7 @@ function renderDay(dayIndex) {
     updateDriverCount(0); document.getElementById('terminalJumpBar').innerHTML = ''; return;
   }
 
-  const TH_ROW = '';
-  let html = '';
+  const TH_ROW = '<colgroup><col style="width:140px"><col style="width:65px"><col style="width:80px"><col style="width:110px"><col><col style="width:50px"><col style="width:55px"><col style="width:45px"><col style="width:90px"><col style="width:70px"><col style="width:58px"></colgroup>';  let html = '';
   let totalDrivers = 0;
 
   data.sections.forEach(section => {
