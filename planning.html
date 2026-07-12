@@ -61,10 +61,21 @@ body {
   letter-spacing: 1px; text-transform: uppercase;
   background: #e8e8e8; border-bottom: 1px solid #d0d0d0;
 }
+#stickyColHeader {
+  position: sticky; top: 82px; z-index: 98;
+  background: #274e13; border-bottom: 2px solid #1a3a0d;
+  display: flex; align-items: center;
+  font-size: 0.6rem; font-weight: 600; color: #fff;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+#stickyColHeader span {
+  padding: 0.4rem 0.5rem; text-align: center; border-right: 1px solid #1a3a0d;
+}
+#stickyColHeader span:first-child { text-align: left; }
+#stickyColHeader span:last-child { border-right: none; }
 .section-block {
   content-visibility: auto; contain-intrinsic-size: auto 60px;
-  margin: 0.4rem 0.5rem; scroll-margin-top: 100px;
-}
+  margin: 0.4rem 0.5rem; scroll-margin-top: 120px;}
 .section-header {
   background: #ffd700; border: 1px solid #e6c200; border-radius: 4px 4px 0 0;
   padding: 0.5rem 0.8rem; cursor: pointer;
@@ -207,6 +218,9 @@ tr.driver-off td { color: #999; }
   </div>
 </div>
 <div id="dayLabel">Sunday</div>
+<div id="stickyColHeader">
+  <span style="width:140px">Driver</span><span style="width:65px">Start</span><span style="width:80px">Arr. 1st</span><span style="width:110px">City</span><span style="flex:1">Route Summary</span><span style="width:50px">Truck</span><span style="width:55px">Trailer</span><span style="width:45px">LD/MT</span><span style="width:90px">Phone</span><span style="width:70px">Status</span><span style="width:58px">Confirm</span>
+</div>
 <div id="mainContent">
   <div id="loadingOverlay"><div class="spinner"></div><div>Loading planning data&hellip;</div></div>
   <div id="gridContainer"></div>
@@ -349,8 +363,7 @@ function renderDay(dayIndex) {
     updateDriverCount(0); document.getElementById('terminalJumpBar').innerHTML = ''; return;
   }
 
-  const TH_ROW = '<thead><tr><th>Driver</th><th>Start</th><th>Arr. 1st</th><th>City</th><th>Route Summary</th><th>Truck</th><th>Trailer</th><th>LD/MT</th><th>Phone</th><th>Status</th><th>Confirm</th></tr></thead>';
-
+  const TH_ROW = '';
   let html = '';
   let totalDrivers = 0;
 
@@ -371,16 +384,14 @@ function renderDay(dayIndex) {
     html += '<table class="planning-table">' + TH_ROW + '<tbody>';
 
     // LOCAL sub-header + rows
-  if (filteredLocal.length > 0) {
+    if (filteredLocal.length > 0) {
       html += '<tr><td colspan="11" class="role-subheader-cell">' + section.terminal + ' - Local</td></tr>';
-      html += '<tr><th>Driver</th><th>Start</th><th>Arr. 1st</th><th>City</th><th>Route Summary</th><th>Truck</th><th>Trailer</th><th>LD/MT</th><th>Phone</th><th>Status</th><th>Confirm</th></tr>';
       filteredLocal.forEach(d => { html += driverRow(d); });
     }
 
     // OTR sub-header + rows
     if (filteredOtr.length > 0) {
       html += '<tr><td colspan="11" class="role-subheader-cell">' + section.terminal + ' - OTR</td></tr>';
-      html += '<tr><th>Driver</th><th>Start</th><th>Arr. 1st</th><th>City</th><th>Route Summary</th><th>Truck</th><th>Trailer</th><th>LD/MT</th><th>Phone</th><th>Status</th><th>Confirm</th></tr>';
       filteredOtr.forEach(d => { html += driverRow(d); });
     }
 
