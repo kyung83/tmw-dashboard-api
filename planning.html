@@ -98,7 +98,6 @@ body {
   letter-spacing: 0.5px; text-transform: uppercase;
   border-bottom: 2px solid #1a3a0d; white-space: nowrap;
   border-right: 1px solid #1a3a0d;
-  position: sticky; top: 88px; z-index: 10;
 }
 .planning-table thead th:last-child { border-right: none; }
 .planning-table th:nth-child(1), .planning-table td:nth-child(1) { width: 140px; }
@@ -132,7 +131,7 @@ body {
 .planning-table td:last-child { border-right: none; }
 .planning-table td.driver-name { color: #111; font-weight: 600; text-align: left; font-size: 0.85rem; }
 .planning-table td.route-summary {
-  color: #555; font-size: 0.7rem; text-align: left;
+  color: #555; font-size: 0.7rem; text-align: center;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .planning-table td.role-subheader-cell {
@@ -272,8 +271,8 @@ async function loadAllDays() {
     loading.innerHTML = '<div style="color:#c00;">Error: ' + err.message + '</div>';
   }
 }
-function refreshData() { allDaysData = {}; loadAllDays(); }
-
+function refreshData() { const keepDay = currentDay; allDaysData = {}; loadAllDays().then(() => switchDay(keepDay)); }
+  
 function parseDay(rows) {
   const records = rows.map(row => {
     const rec = {}; COLUMNS.forEach((col, i) => rec[col] = row[i] || ''); return rec;
