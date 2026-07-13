@@ -251,7 +251,9 @@ const COLUMNS = [
   'OrdCharge','OrdAccessorial','OrdTotalCharge','Tractor'];
 
 let allDaysData = {};
-let overridesMap = {};let currentDay = 0;
+let overridesMap = {};
+let phonesMap = {};
+let currentDay = 0;
 let searchTerm = '';
 
 function signOut() { sessionStorage.removeItem('norlo_auth'); window.location.href = 'index.html'; }
@@ -270,7 +272,23 @@ async function loadOverrides() {
     });
   } catch(e) { console.error('Override load failed:', e); }
 }
-async function initApp() { buildDayTabs(); await loadOverrides(); loadAllDays(); }function buildDayTabs() {
+async function loadPhones() {
+  try {
+    const resp = await fetch(PLANNING_SCRIPT_URL + '?token=' + encodeURIComponent(API_TOKEN) + '&action=readPhones');
+    const data = await resp.json();
+    phonesMap = {};
+    Object.keys(data.phones || {}).forEach(id => { phonesMap[id.toUpperCase().trim()] = data.phones[id]; });
+  } catch(e) { console.error('Phone load failed:', e); }
+}
+function formatPhone(raw) {
+  if (!raw) return '';
+  let d = String(raw).replace(/\D/g, '');
+  if (d.length === 11 && d.charAt(0) === '1') d = d.slice(1);
+  if (d.length === 10) return d.slice(0,3) + '-' + d.slice(3,6) + '-' + d.slice(6);
+  return String(raw);
+}
+async function initApp() { buildDayTabs(); await Promise.all([loadOverrides(), loadPhones()]); loadAllDays(); }
+function buildDayTabs() {
   const bar = document.getElementById('dayTabBar'); const today = new Date(); bar.innerHTML = '';
   for (let i = 0; i < 7; i++) {
     const d = new Date(today); d.setDate(d.getDate() + i);
@@ -448,7 +466,8 @@ function driverRow(d) {
     '<td>' + d.firstStopArrival + '</td>' +
     '<td>' + d.firstStopCity + '</td>' +
     '<td class="route-summary" title="' + escapeHtml(d.routeSummary) + '">' + d.routeSummary + '</td>' +
-    '<td>' + escapeHtml(d.truck) + '</td><td></td><td></td><td></td>' +    '<td>' + chip + '</td>' +
+    '<td>' + escapeHtml(d.truck) + '</td><td></td><td></td><td>' + formatPhone(phonesMap[(d.id || '').toUpperCase().trim()]) + '</td>' +
+    '<td>' + chip + '</td>' +
     '<td></td></tr>';
 }
 
