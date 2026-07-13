@@ -25,7 +25,14 @@ body {
 }
 .header-btn:hover { background: #4a9e5a; }
 .header-right { display: flex; align-items: center; gap: 0.75rem; }
-#signOutBtn { color: #b0d4b8; font-size: 0.75rem; cursor: pointer; text-decoration: underline; background: none; border: none; }
+#constructionNotice {
+  background: #fff3cd; border: 1px solid #f0a500; border-radius: 4px;
+  color: #7a5200; font-size: 0.72rem; font-weight: 700;
+  padding: 0.3rem 0.7rem; letter-spacing: 0.3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 48vw; text-align: center;
+}
+@media (max-width: 900px) { #constructionNotice { display: none; } }#signOutBtn { color: #b0d4b8; font-size: 0.75rem; cursor: pointer; text-decoration: underline; background: none; border: none; }
 #refreshBtn { font-size: 0.8rem; }
 #toolbarBar {
   position: sticky; top: 48px; z-index: 99;
@@ -202,6 +209,7 @@ tr.driver-off td { color: #999; }
     <h1>Dispatch Planning Grid</h1>
     <a href="index.html" class="header-btn">&larr; Driver Board</a>
   </div>
+<div id="constructionNotice">&#9888;&#65039; UNDER CONSTRUCTION &mdash; site in progress. Keep using the Google Driver Planning Workbook for everyday ops until this is finalized.</div>
   <div class="header-right">
     <button id="refreshBtn" class="header-btn" onclick="refreshData()">&#x21bb; Refresh</button>
     <button id="signOutBtn" onclick="signOut()">Sign out</button>
