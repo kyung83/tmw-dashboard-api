@@ -251,7 +251,7 @@ const COLUMNS = [
   'OrdCharge','OrdAccessorial','OrdTotalCharge','Tractor'];
 
 let allDaysData = {};
-let currentDay = 0;
+let overridesMap = {};let currentDay = 0;
 let searchTerm = '';
 
 function signOut() { sessionStorage.removeItem('norlo_auth'); window.location.href = 'index.html'; }
@@ -259,8 +259,18 @@ function checkAuth() {
   if (sessionStorage.getItem('norlo_auth') === '1') return true;
   window.location.href = 'index.html'; return false;
 }
-function initApp() { buildDayTabs(); loadAllDays(); }
-function buildDayTabs() {
+async function loadOverrides() {
+  try {
+    const resp = await fetch(PLANNING_SCRIPT_URL + '?token=' + encodeURIComponent(API_TOKEN) + '&action=readOverrides');
+    const data = await resp.json();
+    overridesMap = {};
+    (data.overrides || []).forEach(row => {
+      const id = (row[0] || '').toUpperCase().trim();
+      if (id) overridesMap[id] = { displayRole: (row[4] || '').trim() };
+    });
+  } catch(e) { console.error('Override load failed:', e); }
+}
+async function initApp() { buildDayTabs(); await loadOverrides(); loadAllDays(); }function buildDayTabs() {
   const bar = document.getElementById('dayTabBar'); const today = new Date(); bar.innerHTML = '';
   for (let i = 0; i < 7; i++) {
     const d = new Date(today); d.setDate(d.getDate() + i);
@@ -305,7 +315,17 @@ function parseDay(rows) {
     if (rec.DriverName && rec.DriverName.includes(',MOCK')) return;
     if (id === 'STIST') return;
     if (rec.DriverName && rec.DriverName.toUpperCase().replace(/\s+/g, '').includes('GOETHALS,TREVIS')) return;
+    var ov = overridesMap[id.toUpperCase()];
+    if (ov && ov.displayRole === 'HIDE') return;
     if (!driverMap[id]) {
+      driverMap[id] = {
+        id, name: rec.DriverName, terminal: rec.TerminalName,
+        terminalOrder: parseInt(rec.TerminalOrder) || 999,
+        roleBucket: rec.RoleBucket, equipClass: rec.EquipClass,
+        displayRole: ov ? ov.displayRole : null, stops: [],
+      };
+    }
+    }    if (!driverMap[id]) {
       driverMap[id] = {
         id, name: rec.DriverName, terminal: rec.TerminalName,
         terminalOrder: parseInt(rec.TerminalOrder) || 999,
@@ -335,19 +355,23 @@ function parseDay(rows) {
   });
 
   // Group by terminal, then split LOCAL vs OTR within each
+// Group by terminal, then by display role within each
+  const ROLE_ORDER = ['Box Truck', 'Part Time', 'Local', 'OTR'];
   const drivers = Object.values(driverMap);
   const terminalGroups = {};
   drivers.forEach(d => {
     const t = d.terminal || 'UNKNOWN';
-    if (!terminalGroups[t]) terminalGroups[t] = { terminal: t, order: d.terminalOrder, local: [], otr: [] };
-    if (d.roleBucket === 'LOCAL DV') terminalGroups[t].local.push(d);
-    else terminalGroups[t].otr.push(d);
+    if (!terminalGroups[t]) terminalGroups[t] = { terminal: t, order: d.terminalOrder, roles: {} };
+    const role = d.displayRole ? d.displayRole.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : (d.roleBucket === 'LOCAL DV' ? 'Local' : 'OTR');
+    if (!terminalGroups[t].roles[role]) terminalGroups[t].roles[role] = [];
+    terminalGroups[t].roles[role].push(d);
   });
   const sections = Object.values(terminalGroups).sort((a, b) => a.order - b.order);
   sections.forEach(s => {
-    s.local.sort((a, b) => a.name.localeCompare(b.name));
-    s.otr.sort((a, b) => a.name.localeCompare(b.name));
-    s.totalDrivers = s.local.length + s.otr.length;
+    Object.values(s.roles).forEach(arr => arr.sort((a, b) => a.name.localeCompare(b.name)));
+    s.totalDrivers = Object.values(s.roles).reduce((sum, arr) => sum + arr.length, 0);
+    s.roleOrder = ROLE_ORDER.filter(r => s.roles[r] && s.roles[r].length > 0);
+    Object.keys(s.roles).forEach(r => { if (!s.roleOrder.includes(r)) s.roleOrder.push(r); });
   });
   return { sections, driverCount: drivers.length };
 }
@@ -377,9 +401,12 @@ function renderDay(dayIndex) {
 
   data.sections.forEach(section => {
     // Filter for search
-    const filteredLocal = searchTerm ? section.local.filter(d => matchesSearch(d)) : section.local;
-    const filteredOtr = searchTerm ? section.otr.filter(d => matchesSearch(d)) : section.otr;
-    const sectionTotal = filteredLocal.length + filteredOtr.length;
+    let sectionTotal = 0;
+    (section.roleOrder || []).forEach(role => {
+      const arr = section.roles[role] || [];
+      const ct = searchTerm ? arr.filter(d => matchesSearch(d)).length : arr.length;
+      sectionTotal += ct;
+    });
     if (sectionTotal === 0) return;
     totalDrivers += sectionTotal;
 
@@ -391,17 +418,15 @@ function renderDay(dayIndex) {
     html += '<div class="section-body">';
     html += '<table class="planning-table">' + TH_ROW + '<tbody>';
 
-    // LOCAL sub-header + rows
-    if (filteredLocal.length > 0) {
-      html += '<tr><td colspan="11" class="role-subheader-cell">' + section.terminal + ' - Local</td></tr>';
-      filteredLocal.forEach(d => { html += driverRow(d); });
-    }
-
-    // OTR sub-header + rows
-    if (filteredOtr.length > 0) {
-      html += '<tr><td colspan="11" class="role-subheader-cell">' + section.terminal + ' - OTR</td></tr>';
-      filteredOtr.forEach(d => { html += driverRow(d); });
-    }
+  // Role sub-headers + rows (dynamic)
+    (section.roleOrder || []).forEach(role => {
+      const arr = section.roles[role] || [];
+      const filtered = searchTerm ? arr.filter(d => matchesSearch(d)) : arr;
+      if (filtered.length > 0) {
+        html += '<tr><td colspan="11" class="role-subheader-cell">' + section.terminal + ' - ' + role + '</td></tr>';
+        filtered.forEach(d => { html += driverRow(d); });
+      }
+    });
 
     html += '</tbody></table></div></div>';
   });
