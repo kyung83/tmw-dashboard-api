@@ -125,7 +125,7 @@ body {
 .planning-table th:nth-child(6), .planning-table td:nth-child(6) { width: 50px; }
 .planning-table th:nth-child(7), .planning-table td:nth-child(7) { width: 55px; }
 .planning-table th:nth-child(8), .planning-table td:nth-child(8) { width: 45px; }
-.planning-table th:nth-child(9), .planning-table td:nth-child(9) { width: 90px; }
+.planning-table th:nth-child(9), .planning-table td:nth-child(9) { width: 115px; }
 .planning-table th:nth-child(10), .planning-table td:nth-child(10) { width: 70px; }
 .planning-table th:nth-child(11), .planning-table td:nth-child(11) { width: 58px; }
 .planning-table td[colspan] { width: auto; }
@@ -228,7 +228,7 @@ tr.driver-off td { color: #999; }
 </div>
 <div id="dayLabel">Sunday</div>
 <div id="stickyColHeader">
-  <span style="width:140px">Driver</span><span style="width:65px">Start</span><span style="width:80px">Arr. 1st</span><span style="width:110px">City</span><span style="flex:1">Route Summary</span><span style="width:50px">Truck</span><span style="width:55px">Trailer</span><span style="width:45px">LD/MT</span><span style="width:90px">Phone</span><span style="width:70px">Status</span><span style="width:58px">Confirm</span>
+  <span style="width:140px">Driver</span><span style="width:65px">Start</span><span style="width:80px">Arr. 1st</span><span style="width:110px">City</span><span style="flex:1">Route Summary</span><span style="width:50px">Truck</span><span style="width:55px">Trailer</span><span style="width:45px">LD/MT</span><span style="width:115px">Phone</span><span style="width:70px">Status</span><span style="width:58px">Confirm</span>
 </div>
 <div id="mainContent">
   <div id="loadingOverlay"><div class="spinner"></div><div>Loading planning data&hellip;</div></div>
@@ -407,7 +407,7 @@ function renderDay(dayIndex) {
     updateDriverCount(0); document.getElementById('terminalJumpBar').innerHTML = ''; return;
   }
 
-  const TH_ROW = '<colgroup><col style="width:140px"><col style="width:65px"><col style="width:80px"><col style="width:110px"><col><col style="width:50px"><col style="width:55px"><col style="width:45px"><col style="width:90px"><col style="width:70px"><col style="width:58px"></colgroup>';  let html = '';
+  const TH_ROW = '<colgroup><col style="width:140px"><col style="width:65px"><col style="width:80px"><col style="width:110px"><col><col style="width:50px"><col style="width:55px"><col style="width:45px"><col style="width:115px"><col style="width:70px"><col style="width:58px"></colgroup>';  let html = '';
   let totalDrivers = 0;
 
   data.sections.forEach(section => {
