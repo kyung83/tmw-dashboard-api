@@ -309,8 +309,7 @@ function parseDay(rows) {
   Object.values(driverMap).forEach(d => {
     d.stops.sort((a, b) => (parseInt(a.StopSeq) || 0) - (parseInt(b.StopSeq) || 0));
     d.firstStopCity = ''; d.firstStopArrival = ''; d.routeSummary = ''; d.tripStatus = '';
-    const realStops = d.stops.filter(s => s.EventCode && !s.EventCode.includes('BMT') && !s.EventCode.includes('RTP'));
-    if (realStops.length > 0) {
+  const realStops = d.stops.filter((s, idx) => { if (idx === 0 && s.StopCompany && s.StopCompany.toUpperCase().startsWith('NORTHERN LOGISTICS')) return false; return s.EventCode && !s.EventCode.includes('BMT') && !s.EventCode.includes('RTP'); });    if (realStops.length > 0) {
       d.firstStopCity = realStops[0].City + (realStops[0].State ? ', ' + realStops[0].State : '');
       d.firstStopArrival = formatTime(realStops[0].Arrival);
     }
