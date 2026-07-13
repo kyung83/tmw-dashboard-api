@@ -296,6 +296,7 @@ function parseDay(rows) {
     if (!id) return;
     if (rec.DriverName && rec.DriverName.includes(',MOCK')) return;
     if (id === 'STIST') return;
+    if (rec.DriverName && rec.DriverName.toUpperCase().replace(/\s+/g, '').includes('GOETHALS,TREVIS')) return;
     if (!driverMap[id]) {
       driverMap[id] = {
         id, name: rec.DriverName, terminal: rec.TerminalName,
