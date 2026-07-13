@@ -325,13 +325,6 @@ function parseDay(rows) {
         displayRole: ov ? ov.displayRole : null, stops: [],
       };
     }
-    }    if (!driverMap[id]) {
-      driverMap[id] = {
-        id, name: rec.DriverName, terminal: rec.TerminalName,
-        terminalOrder: parseInt(rec.TerminalOrder) || 999,
-        roleBucket: rec.RoleBucket, equipClass: rec.EquipClass, stops: [],
-      };
-    }
     driverMap[id].stops.push(rec);
   });
 
