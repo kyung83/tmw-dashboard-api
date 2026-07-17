@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Norlo Current Stops Board</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #ecefe8; color: #222; min-height: 100vh; overflow-x: hidden;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+#norloHeader {
+  position: sticky; top: 0; z-index: 100;
+  background: #1a472a; border-bottom: 2px solid #2d7a3a;
+  padding: 0.55rem 1rem;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+.header-left { display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; }
+.header-left h1 { color: #fff; font-size: 1.05rem; font-weight: 700; letter-spacing: 0.4px; white-space: nowrap; }
+.header-left .subtitle { color: #b0d4b8; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.3px; white-space: nowrap; }
+.header-right { display: flex; align-items: center; gap: 0.6rem; }
+.header-btn {
+  background: #2d7a3a; border: 1px solid #4a9e5a; border-radius: 4px;
+  color: #fff; padding: 0.35rem 0.7rem; font-size: 0.75rem;
+  cursor: pointer; font-weight: 600; text-decoration: none; white-space: nowrap;
+  transition: background 0.15s;
+}
+.header-btn:hover { background: #4a9e5a; }
+#signOutBtn { color: #b0d4b8; font-size: 0.75rem; cursor: pointer; text-decoration: underline; background: none; border: none; }
+
+/* ── Sub Toolbar ────────────────────────────────────────── */
+#toolbarBar {
+  position: sticky; top: 46px; z-index: 99;
+  background: #fff; border-bottom: 1px solid #d0d0d0;
+  padding: 0.4rem 1rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.toolbar-left { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.toolbar-center { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; overflow-x: auto; }
+.toolbar-right { display: flex; align-items: center; gap: 0.8rem; }
+.jump-btn {
+  background: #274e13; border: 1px solid #3a6b1e; border-radius: 3px;
+  color: #fff; padding: 0.22rem 0.5rem; font-size: 0.62rem;
+  cursor: pointer; font-weight: 700; white-space: nowrap;
+  text-transform: uppercase; letter-spacing: 0.4px; transition: background 0.15s;
+}
+.jump-btn:hover { background: #3a6b1e; }
+#lastUpdated { color: #666; font-size: 0.72rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.legend { display: flex; gap: 0.6rem; align-items: center; font-size: 0.68rem; color: #555; }
+.legend-item { display: flex; align-items: center; gap: 4px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.15); }
+.dot-progress { background: #16a34a; }
+.dot-almost { background: #f59e0b; }
+.dot-notstart { background: #9ca3af; }
+
+/* ── Day / Section Titles ──────────────────────────────── */
+#dayLabel {
+  text-align: center; padding: 0.5rem 1rem;
+  color: #1a472a; font-size: 1rem; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  background: #e0e6dc; border-bottom: 1px solid #c8d1c1;
+}
+
+/* ── Summary Stats ─────────────────────────────────────── */
+.stats-bar {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.6rem; padding: 0.75rem 1rem 0.25rem;
+}
+.stat-card {
+  background: #fff; border: 1px solid #d0d0d0; border-radius: 6px;
+  padding: 0.55rem 0.8rem;
+  display: flex; align-items: baseline; justify-content: space-between;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.stat-card .stat-label {
+  color: #555; font-size: 0.66rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.stat-card .stat-value {
+  font-size: 1.5rem; font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.stat-progress .stat-value { color: #16a34a; }
+.stat-almost .stat-value  { color: #d97706; }
+.stat-notstart .stat-value { color: #6b7280; }
+.stat-terminals .stat-value { color: #1a472a; }
+
+/* ── Bucket Headings ───────────────────────────────────── */
+.bucket-title {
+  padding: 1rem 1rem 0.25rem;
+  font-size: 0.72rem; font-weight: 800;
+  color: #1a472a; letter-spacing: 1.5px; text-transform: uppercase;
+  display: flex; align-items: baseline; gap: 0.6rem;
+}
+.bucket-title .bucket-count {
+  color: #6b7280; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.3px;
+}
+.bucket-title .bucket-rule {
+  flex: 1; height: 2px; background: linear-gradient(90deg, #274e13, transparent);
+  margin-left: 0.4rem;
+}
+
+/* ── Terminal Grid ─────────────────────────────────────── */
+.terminal-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 0.75rem; padding: 0.5rem 1rem 1rem;
+}
+.terminal-card {
+  background: #fff; border: 1px solid #ccc; border-radius: 6px;
+  overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  scroll-margin-top: 110px;
+  display: flex; flex-direction: column;
+}
+.terminal-card-header {
+  background: #ffd700; border-bottom: 1px solid #e6c200;
+  padding: 0.5rem 0.75rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.terminal-card-title {
+  color: #1a472a; font-size: 0.82rem; font-weight: 800;
+  letter-spacing: 0.8px; text-transform: uppercase;
+}
+.terminal-card-count {
+  color: #7a5200; font-size: 0.68rem; font-weight: 700;
+  background: rgba(0,0,0,0.08); padding: 2px 8px; border-radius: 10px;
+}
+
+/* Not-started variant */
+.terminal-card.notstart .terminal-card-header {
+  background: #dbe0d5; border-bottom-color: #b8c0a8;
+}
+.terminal-card.notstart .terminal-card-title { color: #3d4a2a; }
+.terminal-card.notstart .terminal-card-count { color: #4a5a35; background: rgba(0,0,0,0.06); }
+
+/* Driver list */
+.driver-list { display: flex; flex-direction: column; }
+.driver-row {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid #eef0eb;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+}
+.driver-row:last-child { border-bottom: none; }
+.driver-row:nth-child(odd) { background: #fafbf8; }
+
+.driver-info { min-width: 0; }
+.driver-name {
+  font-size: 0.85rem; font-weight: 700; color: #1a2b17;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+.progress-track {
+  height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+  border-radius: 3px; transition: width 0.3s ease;
+}
+.progress-fill.almost {
+  background: linear-gradient(90deg, #fbbf24 0%, #d97706 100%);
+}
+.progress-fill.notstart {
+  background: #9ca3af;
+}
+.driver-progress {
+  font-family: ui-monospace, 'SF Mono', Consolas, 'Courier New', monospace;
+  font-weight: 700; font-size: 0.85rem;
+  padding: 4px 10px; border-radius: 20px;
+  min-width: 62px; text-align: center;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.driver-progress.in-progress {
+  background: #052e16; color: #86efac; border-color: #16a34a;
+}
+.driver-progress.almost-done {
+  background: #422006; color: #fbbf24; border-color: #f59e0b;
+}
+.driver-progress.not-started {
+  background: #262626; color: #9ca3af; border-color: #4b5563;
+  border-style: dashed;
+}
+.stops-left {
+  font-size: 0.62rem; color: #6b7280; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.4px;
+  margin-top: 2px;
+}
+.stops-left.almost { color: #d97706; }
+
+/* ── Empty States ─────────────────────────────────────── */
+.empty-state {
+  text-align: center; padding: 2rem 1rem;
+  color: #6b7280; font-size: 0.9rem;
+}
+.empty-state .icon { font-size: 2.2rem; margin-bottom: 0.4rem; opacity: 0.4; }
+
+/* ── Loading ──────────────────────────────────────────── */
+#loadingScreen {
+  display: none; padding: 2.5rem 1rem; text-align: center;
+  color: #555;
+}
+#loadingScreen.active { display: block; }
+.spinner {
+  display: inline-block; width: 24px; height: 24px;
+  border: 3px solid #d0d0d0; border-top-color: #1a472a;
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+  margin-bottom: 0.6rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#errorMsg {
+  display: none; margin: 1rem; padding: 0.6rem 0.8rem;
+  background: #fef2f2; border: 1px solid #fca5a5; border-radius: 4px;
+  color: #991b1b; font-size: 0.8rem;
+}
+#errorMsg.active { display: block; }
+
+/* ── Back to Top ──────────────────────────────────────── */
+#backToTop {
+  position: fixed; bottom: 20px; right: 20px;
+  background: #1a472a; color: #fff; border: none;
+  padding: 0.5rem 0.75rem; border-radius: 20px;
+  font-size: 0.7rem; font-weight: 700; cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  opacity: 0; transition: opacity 0.2s; pointer-events: none;
+  z-index: 200;
+}
+#backToTop.visible { opacity: 1; pointer-events: auto; }
+
+@media (max-width: 700px) {
+  #toolbarBar { flex-wrap: wrap; }
+  .toolbar-right { flex-basis: 100%; justify-content: space-between; margin-top: 0.3rem; }
+  .header-left h1 { font-size: 0.95rem; }
+  .header-left .subtitle { display: none; }
+  .legend { display: none; }
+  .terminal-grid { padding: 0.4rem 0.6rem 0.8rem; }
+  .stats-bar { padding: 0.5rem 0.6rem 0.2rem; grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div id="norloHeader">
+  <div class="header-left">
+    <h1>📍 Current Stops Board</h1>
+    <span class="subtitle">Live LTL Local · Today</span>
+  </div>
+  <div class="header-right">
+    <a href="planning.html" class="header-btn">&larr; Planning Grid</a>
+    <button id="refreshBtn" class="header-btn" onclick="refreshData()">&#x21bb; Refresh</button>
+    <button id="signOutBtn" onclick="signOut()">Sign out</button>
+  </div>
+</div>
+
+<div id="toolbarBar">
+  <div class="toolbar-left">
+    <span class="legend">
+      <span class="legend-item"><span class="legend-dot dot-progress"></span>In Progress</span>
+      <span class="legend-item"><span class="legend-dot dot-almost"></span>Almost Done (&le;2)</span>
+      <span class="legend-item"><span class="legend-dot dot-notstart"></span>Not Started</span>
+    </span>
+  </div>
+  <div class="toolbar-center" id="terminalJumpBar"></div>
+  <div class="toolbar-right">
+    <span id="lastUpdated">&mdash;</span>
+  </div>
+</div>
+
+<div id="dayLabel">Loading…</div>
+
+<div id="errorMsg"></div>
+<div id="loadingScreen"><div class="spinner"></div><div>Loading current stops…</div></div>
+
+<div id="mainContent"></div>
+
+<button id="backToTop" onclick="window.scrollTo({top:0, behavior:'smooth'})">&uarr; Top</button>
+
+<script>
+// ─── CONFIG (mirror of index.html) ───────────────────────────
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxd7cv_YozmXuAO_4CQd_lQYR9qb7D9reV0frLG1_Obq9PtZE8HYUG_rXqXamcYZMa5sA/exec";
+const API_TOKEN = "8U+54ldJ0U5V4pmac7gA8ez+yhsN01MW/jECyMYsrCU=";
+const COLUMNS = [
+  "RoleBucket","EquipClass","TerminalName","TerminalOrder",
+  "DriverID","DriverName","OrderNumber","EventCode",
+  "StopCompany","City","State","ZipCode","Arrival","Departure",
+  "Est","Dep","OrderStatus","OrderPieces","Weight",
+  "OrderCompletion","StopSeq","MovementNum",
+  "DepartedFromYard","ElapsedFromYard","TripProgress",
+  "IsCurrentStop","CompletedFlag","LastRefreshed",
+  "ScheduledStart","GeotabLogin","Email",
+  "OrdCharge","OrdAccessorial","OrdTotalCharge"
+];
+const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const REFRESH_MS = 180000; // 3 min in sync with LTL board
+let autoRefreshTimer = null;
+
+// ─── Auth ─────────────────────────────────────────────────────
+function checkAuth() {
+  if (sessionStorage.getItem("norlo_auth") === "1") return true;
+  window.location.href = "index.html"; return false;
+}
+function signOut() {
+  sessionStorage.removeItem("norlo_auth");
+  window.location.href = "index.html";
+}
+
+// ─── Day label ────────────────────────────────────────────────
+function updateDayLabel() {
+  const d = new Date();
+  document.getElementById("dayLabel").textContent =
+    DAY_NAMES[d.getDay()] + " " + (d.getMonth()+1) + "/" + d.getDate();
+}
+
+// ─── Data fetch ───────────────────────────────────────────────
+function showLoading() {
+  document.getElementById("loadingScreen").classList.add("active");
+  document.getElementById("mainContent").innerHTML = "";
+  document.getElementById("errorMsg").classList.remove("active");
+}
+function hideLoading() {
+  document.getElementById("loadingScreen").classList.remove("active");
+}
+function showError(msg) {
+  const el = document.getElementById("errorMsg");
+  el.textContent = "⚠ " + msg;
+  el.classList.add("active");
+  hideLoading();
+}
+
+async function loadData() {
+  showLoading();
+  try {
+    const url = `${APPS_SCRIPT_URL}?token=${encodeURIComponent(API_TOKEN)}&action=read&role=ltl`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+    const drivers = parseRows(json.rows || []);
+    render(drivers);
+    document.getElementById("lastUpdated").textContent =
+      "Updated " + new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit", second:"2-digit"});
+    scheduleAutoRefresh();
+  } catch (err) {
+    showError(err.message || "Failed to load data");
+  }
+}
+async function refreshData() {
+  // Ask Apps Script to refresh from source first, then re-read
+  try {
+    const url = `${APPS_SCRIPT_URL}?token=${encodeURIComponent(API_TOKEN)}&action=refresh&role=ltl`;
+    await fetch(url);
+  } catch(e) { /* fall through to loadData which will surface any real error */ }
+  await loadData();
+}
+function scheduleAutoRefresh() {
+  if (autoRefreshTimer) clearTimeout(autoRefreshTimer);
+  autoRefreshTimer = setTimeout(() => { if (!document.hidden) loadData(); }, REFRESH_MS);
+}
+
+// ─── Parse rows into deduped drivers ─────────────────────────
+function parseRows(rows) {
+  const map = {};
+  rows.forEach(row => {
+    while (row.length < COLUMNS.length) row.push("");
+    const rec = {};
+    COLUMNS.forEach((col, i) => rec[col] = row[i] || "");
+    const key = `${rec.DriverID}|${rec.MovementNum}`;
+    if (!map[key]) {
+      map[key] = {
+        driverID: rec.DriverID,
+        driverName: rec.DriverName,
+        terminal: rec.TerminalName || "UNKNOWN",
+        terminalOrder: parseInt(rec.TerminalOrder) || 99,
+        tripProgress: rec.TripProgress || "",
+        departedFromYard: rec.DepartedFromYard || "",
+      };
+    }
+  });
+  // Parse "X of Y" pill, compute remaining
+  return Object.values(map).map(d => {
+    const m = /^(\d+)\s*of\s*(\d+)$/i.exec((d.tripProgress||"").trim());
+    d.done = m ? parseInt(m[1]) : 0;
+    d.total = m ? parseInt(m[2]) : 0;
+    d.remaining = Math.max(0, d.total - d.done);
+    d.hasProgress = !!m;
+    return d;
+  }).filter(d => d.hasProgress); // Only drivers with an active trip on today's LTL Local board
+}
+
+// ─── Name / sort helpers ─────────────────────────────────────
+function displayName(raw) {
+  if (!raw) return "";
+  const p = raw.split(","); if (p.length < 2) return raw;
+  const cap = s => s.trim().charAt(0).toUpperCase() + s.trim().slice(1).toLowerCase();
+  return cap(p[1]) + " " + cap(p[0]);
+}
+function lastNameKey(raw) {
+  if (!raw) return "";
+  return (raw.split(",")[0] || "").trim().toLowerCase();
+}
+
+// ─── Group + Render ──────────────────────────────────────────
+function groupByTerminal(drivers) {
+  const g = {};
+  drivers.forEach(d => {
+    if (!g[d.terminal]) g[d.terminal] = { terminal: d.terminal, order: d.terminalOrder, drivers: [] };
+    g[d.terminal].drivers.push(d);
+  });
+  const terminals = Object.values(g).sort((a,b) => a.order - b.order || a.terminal.localeCompare(b.terminal));
+  // Sort within terminal: remaining DESC, then last name ASC
+  terminals.forEach(t => {
+    t.drivers.sort((a,b) => (b.remaining - a.remaining) || lastNameKey(a.driverName).localeCompare(lastNameKey(b.driverName)));
+  });
+  return terminals;
+}
+
+function driverRowHtml(d) {
+  const pct = d.total > 0 ? (d.done / d.total) * 100 : 0;
+  let pillClass = "in-progress";
+  let fillClass = "";
+  let leftClass = "";
+  if (d.done === 0) {
+    pillClass = "not-started";
+    fillClass = "notstart";
+  } else if (d.remaining > 0 && d.remaining <= 2) {
+    pillClass = "almost-done";
+    fillClass = "almost";
+    leftClass = "almost";
+  } else if (d.remaining === 0) {
+    pillClass = "almost-done";
+    fillClass = "almost";
+  }
+  const remainingLabel = d.done === 0
+    ? `${d.total} stop${d.total !== 1 ? "s" : ""} to go`
+    : d.remaining === 0
+      ? "All stops complete"
+      : `${d.remaining} stop${d.remaining !== 1 ? "s" : ""} left`;
+  return `
+    <div class="driver-row">
+      <div class="driver-info">
+        <div class="driver-name">${escapeHtml(displayName(d.driverName))}</div>
+        <div class="progress-track"><div class="progress-fill ${fillClass}" style="width:${pct.toFixed(1)}%"></div></div>
+        <div class="stops-left ${leftClass}">${remainingLabel}</div>
+      </div>
+      <div class="driver-progress ${pillClass}">${d.done} of ${d.total}</div>
+    </div>`;
+}
+
+function terminalCardHtml(t, variant) {
+  const cardClass = "terminal-card" + (variant === "notstart" ? " notstart" : "");
+  const idAttr = `id="term-${variant}-${slug(t.terminal)}"`;
+  return `
+    <div class="${cardClass}" ${idAttr}>
+      <div class="terminal-card-header">
+        <span class="terminal-card-title">${escapeHtml(t.terminal)}</span>
+        <span class="terminal-card-count">${t.drivers.length} driver${t.drivers.length !== 1 ? "s" : ""}</span>
+      </div>
+      <div class="driver-list">
+        ${t.drivers.map(driverRowHtml).join("")}
+      </div>
+    </div>`;
+}
+
+function render(allDrivers) {
+  hideLoading();
+  updateDayLabel();
+  const started    = allDrivers.filter(d => d.done > 0);
+  const notStarted = allDrivers.filter(d => d.done === 0);
+  const startedTerms    = groupByTerminal(started);
+  const notStartedTerms = groupByTerminal(notStarted);
+
+  const almostDone = started.filter(d => d.remaining > 0 && d.remaining <= 2).length;
+  const allTerms = new Set([...startedTerms.map(t=>t.terminal), ...notStartedTerms.map(t=>t.terminal)]);
+
+  let html = "";
+  // Stats bar
+  html += `<div class="stats-bar">
+    <div class="stat-card stat-progress"><span class="stat-label">In Progress</span><span class="stat-value">${started.length}</span></div>
+    <div class="stat-card stat-almost"><span class="stat-label">Almost Done</span><span class="stat-value">${almostDone}</span></div>
+    <div class="stat-card stat-notstart"><span class="stat-label">Not Yet Started</span><span class="stat-value">${notStarted.length}</span></div>
+    <div class="stat-card stat-terminals"><span class="stat-label">Terminals</span><span class="stat-value">${allTerms.size}</span></div>
+  </div>`;
+
+  // In Progress bucket
+  if (startedTerms.length > 0) {
+    const startedTotal = started.length;
+    html += `<div class="bucket-title">In Progress <span class="bucket-count">${startedTotal} driver${startedTotal!==1?"s":""}</span><span class="bucket-rule"></span></div>`;
+    html += `<div class="terminal-grid">`;
+    startedTerms.forEach(t => { html += terminalCardHtml(t, "started"); });
+    html += `</div>`;
+  } else {
+    html += `<div class="empty-state"><div class="icon">🅿️</div>No drivers currently on a started trip.</div>`;
+  }
+
+  // Not Yet Started bucket
+  if (notStartedTerms.length > 0) {
+    const nsTotal = notStarted.length;
+    html += `<div class="bucket-title">Not Yet Started <span class="bucket-count">${nsTotal} driver${nsTotal!==1?"s":""}</span><span class="bucket-rule"></span></div>`;
+    html += `<div class="terminal-grid">`;
+    notStartedTerms.forEach(t => { html += terminalCardHtml(t, "notstart"); });
+    html += `</div>`;
+  }
+
+  document.getElementById("mainContent").innerHTML = html;
+
+  // Terminal jump buttons — combined (started first, then notstart only if unique)
+  const jumpBar = document.getElementById("terminalJumpBar");
+  jumpBar.innerHTML = "";
+  const seen = new Set();
+  [...startedTerms, ...notStartedTerms].forEach(t => {
+    if (seen.has(t.terminal)) return;
+    seen.add(t.terminal);
+    const btn = document.createElement("button");
+    btn.className = "jump-btn"; btn.textContent = t.terminal;
+    const targetVariant = startedTerms.find(x=>x.terminal===t.terminal) ? "started" : "notstart";
+    btn.onclick = () => {
+      const el = document.getElementById(`term-${targetVariant}-${slug(t.terminal)}`);
+      if (el) el.scrollIntoView({ behavior:"smooth", block:"start" });
+    };
+    jumpBar.appendChild(btn);
+  });
+}
+
+function slug(s) { return (s||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""); }
+function escapeHtml(s) { return s ? String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;") : ""; }
+
+// ─── Back to top ──────────────────────────────────────────────
+window.addEventListener("scroll", () => {
+  const btn = document.getElementById("backToTop");
+  if (window.scrollY > 300) btn.classList.add("visible"); else btn.classList.remove("visible");
+}, { passive: true });
+
+// ─── Init ─────────────────────────────────────────────────────
+if (checkAuth()) {
+  updateDayLabel();
+  loadData();
+}
+</script>
+</body>
+</html>
