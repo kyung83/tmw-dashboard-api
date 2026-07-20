@@ -303,11 +303,11 @@ let autoRefreshTimer = null;
 
 // ─── Auth ─────────────────────────────────────────────────────
 function checkAuth() {
-  if (sessionStorage.getItem("norlo_auth") === "1") return true;
+  if (sessionStorage.getItem("norlo_token")) return true;
   window.location.href = "index.html"; return false;
 }
 function signOut() {
-  sessionStorage.removeItem("norlo_auth");
+  sessionStorage.removeItem("norlo_token");
   window.location.href = "index.html";
 }
 
