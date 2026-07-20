@@ -416,8 +416,7 @@
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxd7cv_YozmXuAO_4CQd_lQYR9qb7D9reV0frLG1_Obq9PtZE8HYUG_rXqXamcYZMa5sA/exec";
 const API_TOKEN = "8U+54ldJ0U5V4pmac7gA8ez+yhsN01MW/jECyMYsrCU=";
-const APP_USER  = "NorloOPS";
-const APP_PASS  = "DIspatch#1";
+// Credentials are validated server-side — nothing to expose here
 // ─────────────────────────────────────────────────────────────────────────────
 
 const COLUMNS = [
@@ -440,22 +439,45 @@ let selectedArchiveDate = null;
 let archiveCompletedData = null;
 let archiveInProgressData = null;
 
-// AUTH
-function doLogin() {
-  const u = document.getElementById("loginUser").value;
+// AUTH — server-side credential check via Apps Script
+async function doLogin() {
+  const u = document.getElementById("loginUser").value.trim();
   const p = document.getElementById("loginPass").value;
-  if (u === APP_USER && p === APP_PASS) {
-    sessionStorage.setItem("norlo_auth", "1");
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("boardScreen").style.display = "block";
-    loadData();
-  } else {
-    document.getElementById("loginError").style.display = "block";
+  const err = document.getElementById("loginError");
+  const btn = document.querySelector(".login-btn");
+
+  if (!u || !p) {
+    err.textContent = "Please enter username and password.";
+    err.style.display = "block";
+    return;
   }
+
+  if (btn) btn.disabled = true;
+  err.style.display = "none";
+
+  try {
+    const url = `${APPS_SCRIPT_URL}?action=login&user=${encodeURIComponent(u)}&pass=${encodeURIComponent(p)}`;
+    const res = await fetch(url);
+    const json = await res.json();
+    if (json.token) {
+      sessionStorage.setItem("norlo_token", json.token);
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("boardScreen").style.display = "block";
+      loadData();
+    } else {
+      err.textContent = json.error || "Invalid username or password.";
+      err.style.display = "block";
+    }
+  } catch (e) {
+    err.textContent = "Could not reach server. Try again.";
+    err.style.display = "block";
+  }
+
+  if (btn) btn.disabled = false;
 }
 
 function signOut() {
-  sessionStorage.removeItem("norlo_auth");
+  sessionStorage.removeItem("norlo_token");
   document.getElementById("boardScreen").style.display = "none";
   document.getElementById("loginScreen").style.display = "flex";
   document.getElementById("loginUser").value = "";
@@ -463,7 +485,7 @@ function signOut() {
   document.getElementById("loginError").style.display = "none";
 }
 
-if (sessionStorage.getItem("norlo_auth") === "1") {
+if (sessionStorage.getItem("norlo_token")) {
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("boardScreen").style.display = "block";
 }
@@ -1227,7 +1249,7 @@ function fmtChipTime(val) {
   return String(val).replace(/^(\d{1,2}:\d{2})(:\d{2})?(\s*[AP]M)?$/i, "$1$3").trim();
 }
 
-if (sessionStorage.getItem("norlo_auth") === "1") loadData();
+if (sessionStorage.getItem("norlo_token")) loadData();
 </script>
 </body>
 </html>
