@@ -118,6 +118,19 @@
   .fuel-map-btn:hover { background: #78350f; color: #fde68a; }
   .fuel-map-btn:active { transform: translateY(0); }
 
+  .planning-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: #0f1f35;
+    border: 1px solid #3b82f6;
+    color: #93c5fd; font-size: 12px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 6px 16px; border-radius: 6px;
+    font-family: var(--font-mono);
+    text-decoration: none; cursor: pointer; user-select: none;
+    transition: background 0.15s, color 0.15s;
+  }
+  .planning-btn:hover { background: #1e3a5f; color: #bfdbfe; }
+
   .board { padding: 20px 24px; }
   .terminal-block { margin-bottom: 20px; scroll-margin-top: 110px; }
   .terminal-header { background: #1a0a2e; border: 1px solid #7c3aed; border-radius: 8px 8px 0 0; padding: 10px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
@@ -338,7 +351,7 @@
         <option value="">📅 Live — Today</option>
       </select>
       <a class="fuel-map-btn" href="https://fuel-price-map.pages.dev/" target="_blank" rel="noopener">⛽ Fuel Map</a>
-      <a href="planning.html" class="header-btn" style="background:#1a2332;border-color:#7cb3d4;color:#7cb3d4;">📋 Planning Grid</a>
+      <a href="planning.html" class="planning-btn">📋 Planning Grid</a>
     </div>
     <div class="header-right">
       <span class="last-updated" id="lastUpdated">—</span>
