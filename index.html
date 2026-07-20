@@ -320,6 +320,30 @@
   .driver-revenue-item span { color: #fbbf24; font-weight: 700; }
   .driver-revenue-item.rev-total span { color: #4ade80; font-weight: 700; font-size: 12px; }
   .stop-rev { color: #fbbf24; font-weight: 600; font-size: 11px; }
+
+  /* ── OTR NEXT STOP CHIP ── */
+  .next-stop-chip {
+    display: inline-block;
+    margin-left: 12px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    background: #052e16;
+    color: #86efac;
+    border: 1px solid #16a34a;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  .next-stop-chip.stopped {
+    background: #451a03;
+    color: #fbbf24;
+    border-color: #b45309;
+  }
+  .next-stop-chip .ns-city { color: #fff; font-weight: 700; }
+  .next-stop-chip .ns-miles { color: #fff; font-weight: 700; margin-left: 4px; }
+  .next-stop-chip .ns-icon { margin-right: 4px; opacity: 0.85; }
 </style>
 </head>
 <body>
@@ -429,7 +453,6 @@
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxd7cv_YozmXuAO_4CQd_lQYR9qb7D9reV0frLG1_Obq9PtZE8HYUG_rXqXamcYZMa5sA/exec";
 const API_TOKEN = "8U+54ldJ0U5V4pmac7gA8ez+yhsN01MW/jECyMYsrCU=";
-// Credentials are validated server-side — nothing to expose here
 // ─────────────────────────────────────────────────────────────────────────────
 
 const COLUMNS = [
@@ -452,7 +475,6 @@ let selectedArchiveDate = null;
 let archiveCompletedData = null;
 let archiveInProgressData = null;
 
-// AUTH — server-side credential check via Apps Script
 async function doLogin() {
   const u = document.getElementById("loginUser").value.trim();
   const p = document.getElementById("loginPass").value;
@@ -503,7 +525,6 @@ if (sessionStorage.getItem("norlo_token")) {
   document.getElementById("boardScreen").style.display = "block";
 }
 
-// TAB
 function switchTab(el) {
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   el.classList.add("active");
@@ -527,7 +548,6 @@ function switchTab(el) {
   loadData();
 }
 
-// ARCHIVE
 async function loadArchiveDates() {
   try {
     const url = `${APPS_SCRIPT_URL}?token=${encodeURIComponent(API_TOKEN)}&action=archiveDates`;
@@ -590,7 +610,6 @@ function renderArchive() {
   let totalDrivers = 0;
   const rendered = [];
 
-  // COMPLETED SECTION
   completed.forEach(function(terminal) {
     var filtered = search
       ? terminal.drivers.filter(function(d) {
@@ -652,7 +671,6 @@ function renderArchive() {
     html += '</div></div>';
   });
 
-  // IN PROGRESS SECTION
   if (inProgress.length > 0) {
     var hasIPDrivers = inProgress.some(function(t) {
       if (!search) return t.drivers.length > 0;
@@ -741,7 +759,6 @@ function renderArchive() {
   }
 }
 
-// LOAD DATA
 async function loadData(preserveScroll = false) {
   if (selectedArchiveDate) return;
   const savedScroll = preserveScroll ? window.scrollY : 0;
@@ -910,7 +927,6 @@ function renderBoard(terminals) {
       const emailAttr = (driver.email || "").replace(/'/g, "\\'");
       const rev = calcDriverRevenue(driver);
 
-      // Revenue display: LTL/Flatbed/OTR get current order + total; Completed gets total only
       let revHtml = "";
       if (isCompleted) {
         revHtml = `<div class="driver-revenue">
@@ -1016,11 +1032,8 @@ function toggleTerminal(key) {
   }
 }
 
-// EXPAND / COLLAPSE ALL
 function collapseAll() {
-  // Collapse all driver stop tables
   document.querySelectorAll('.driver-block').forEach(el => el.classList.add('collapsed'));
-  // Collapse all terminal containers
   document.querySelectorAll('.terminal-collapse-icon').forEach(icon => {
     const termKey = icon.id.replace('icon-', '');
     const container = document.getElementById(termKey);
@@ -1030,14 +1043,12 @@ function collapseAll() {
 }
 
 function expandAll() {
-  // Expand all terminal containers
   document.querySelectorAll('.terminal-collapse-icon').forEach(icon => {
     const termKey = icon.id.replace('icon-', '');
     const container = document.getElementById(termKey);
     if (container) container.style.display = '';
     icon.style.transform = '';
   });
-  // Expand all driver stop tables
   document.querySelectorAll('.driver-block').forEach(el => el.classList.remove('collapsed'));
 }
 
@@ -1058,7 +1069,6 @@ window.addEventListener('scroll', () => {
   else btn.classList.remove('visible');
 }, { passive: true });
 
-// HOS MODAL
 async function showHOS(email) {
   const modal = document.getElementById("hosModal");
   const emailEl = document.getElementById("hosEmail");
@@ -1096,7 +1106,6 @@ function closeHOS() {
   document.getElementById("hosModal").classList.remove("show");
 }
 
-// LOCATE MODAL
 async function showLocate(email) {
   const modal = document.getElementById("locateModal");
   const truckEl = document.getElementById("locateTruck");
@@ -1191,21 +1200,19 @@ function showError(msg) {
   document.getElementById("board").innerHTML = `<div class="state-msg"><div class="icon">⚠</div><div class="title">Could not load data</div><div class="sub">${msg}</div></div>`;
   document.getElementById("driverCount").textContent = "";
 }
-// ── REVENUE HELPERS ──
+
 function fmtCur(val) {
   const n = parseFloat(val);
   if (isNaN(n) || n === 0) return "";
   return "$" + n.toFixed(2);
 }
 function calcDriverRevenue(driver) {
-  // Current order = order on the IsCurrentStop=1 stop (if it has an order)
   const curStop = (driver.stops || []).find(s =>
     (s.isCurrentStop === "1" || s.isCurrentStop === 1) &&
     s.orderNumber && s.orderNumber !== "0"
   );
   const curCharge = curStop ? (parseFloat(curStop.ordCharge) || 0) : 0;
   const curAcc = curStop ? (parseFloat(curStop.ordAccessorial) || 0) : 0;
-  // Total movement = sum of distinct orders' OrdTotalCharge
   const seen = {};
   let totalMov = 0;
   (driver.stops || []).forEach(s => {
@@ -1264,5 +1271,119 @@ function fmtChipTime(val) {
 
 if (sessionStorage.getItem("norlo_token")) loadData();
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     OTR POSITIONS BLOCK v2 — Safe (no MutationObserver, no loop risk)
+     ═══════════════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+  try {
+    var TOKEN = (typeof API_TOKEN !== 'undefined') ? API_TOKEN : '';
+    var URL_BASE = (typeof APPS_SCRIPT_URL !== 'undefined') ? APPS_SCRIPT_URL : '';
+    if (!TOKEN || !URL_BASE) { console.warn('[OTR] No token/url — bailing'); return; }
+    var OTR_URL = URL_BASE + '?token=' + encodeURIComponent(TOKEN) + '&action=readOTRPositions';
+    var positionMap = {};
+
+    function fetchOTRPositions() {
+      try {
+        fetch(OTR_URL, { cache: 'no-store' })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (!data || !data.header || !data.rows) return;
+            var idIdx       = data.header.indexOf('DriverID');
+            var cityIdx     = data.header.indexOf('StopCity');
+            var stateIdx    = data.header.indexOf('StopState');
+            var milesIdx    = data.header.indexOf('MilesToGo');
+            var ignitionIdx = data.header.indexOf('IgnitionState');
+            var map = {};
+            data.rows.forEach(function(r) {
+              var id = r[idIdx];
+              if (id) map[id] = {
+                city: r[cityIdx] || '',
+                state: r[stateIdx] || '',
+                miles: r[milesIdx],
+                ignition: r[ignitionIdx] || ''
+              };
+            });
+            positionMap = map;
+            console.log('[OTR] Loaded', Object.keys(map).length, 'positions');
+          })
+          .catch(function(e) { console.warn('[OTR] fetch failed:', e); });
+      } catch (e) { console.warn('[OTR] fetch threw:', e); }
+    }
+
+    function otrTabActive() {
+      var active = document.querySelector('.tab.active');
+      return !!(active && (active.getAttribute('data-role') || '').toLowerCase() === 'otr');
+    }
+
+    function injectChips() {
+      try {
+        if (!otrTabActive()) return;
+        if (!positionMap || Object.keys(positionMap).length === 0) return;
+
+        var blocks = document.querySelectorAll('#board .driver-block');
+        if (blocks.length === 0) return;
+
+        blocks.forEach(function(block) {
+          var driverId = null;
+          var metas = block.querySelectorAll('.driver-meta-item');
+          for (var i = 0; i < metas.length; i++) {
+            var txt = (metas[i].textContent || '').trim();
+            if (txt.indexOf('ID:') === 0) {
+              var s = metas[i].querySelector('span');
+              if (s) driverId = (s.textContent || '').trim();
+              break;
+            }
+          }
+          if (!driverId) return;
+          var pos = positionMap[driverId];
+          if (!pos) return;
+
+          var key = pos.city + '|' + pos.state + '|' + pos.miles + '|' + pos.ignition;
+          var existing = block.querySelector('.next-stop-chip');
+          if (existing && existing.getAttribute('data-key') === key) return;
+          if (existing) existing.remove();
+
+          var stopped = (pos.ignition === 'STOPPED');
+          var milesText = (pos.miles === null || pos.miles === '' || isNaN(pos.miles)) ? '—' : pos.miles;
+
+          var chip = document.createElement('span');
+          chip.className = 'next-stop-chip' + (stopped ? ' stopped' : '');
+          chip.setAttribute('data-key', key);
+          chip.innerHTML =
+            '<span class="ns-icon">' + (stopped ? '⏸' : '🚚') + '</span>' +
+            'Next Stop: <span class="ns-city">' + pos.city + ', ' + pos.state + '</span>' +
+            ' · Miles to go:<span class="ns-miles">' + milesText + '</span>';
+
+          var progress = block.querySelector('.driver-progress');
+          if (progress && progress.parentNode) {
+            progress.parentNode.insertBefore(chip, progress.nextSibling);
+          } else {
+            var header = block.querySelector('.driver-header');
+            if (header) header.appendChild(chip);
+          }
+        });
+      } catch (e) { console.warn('[OTR] inject threw:', e); }
+    }
+
+    function boot() {
+      fetchOTRPositions();
+      setInterval(fetchOTRPositions, 3 * 60 * 1000);
+      setInterval(injectChips, 3000);
+      console.log('[OTR] Booted safely');
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function() { setTimeout(boot, 3000); });
+    } else {
+      setTimeout(boot, 3000);
+    }
+  } catch (e) {
+    console.error('[OTR] Fatal error, block disabled:', e);
+  }
+})();
+</script>
+
 </body>
 </html>
