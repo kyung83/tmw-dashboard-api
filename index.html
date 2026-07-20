@@ -1264,5 +1264,168 @@ function fmtChipTime(val) {
 
 if (sessionStorage.getItem("norlo_token")) loadData();
 </script>
+<!--
+  ═══════════════════════════════════════════════════════════════════════
+  OTR POSITIONS BLOCK — Miles-to-go per OTR driver
+  Paste this ENTIRE block into index.html just before the closing </body> tag.
+  Additive; does not modify any existing rendering.
+  ═══════════════════════════════════════════════════════════════════════
+-->
+<style>
+  .next-stop-chip {
+    display: inline-block;
+    margin-left: 12px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-weight: 600;
+    background: #052e16;
+    color: #86efac;
+    border: 1px solid #16a34a;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  .next-stop-chip.stopped {
+    background: #451a03;
+    color: #fbbf24;
+    border-color: #b45309;
+  }
+  .next-stop-chip .ns-city {
+    color: #fff;
+    font-weight: 700;
+  }
+  .next-stop-chip .ns-miles {
+    color: #fff;
+    font-weight: 700;
+    margin-left: 4px;
+  }
+  .next-stop-chip .ns-icon {
+    margin-right: 4px;
+    opacity: 0.85;
+  }
+</style>
+
+<script>
+(function() {
+  // Reuse the globals index.html already defines
+  var TOKEN = (typeof API_TOKEN !== 'undefined') ? API_TOKEN : '';
+  var URL_BASE = (typeof APPS_SCRIPT_URL !== 'undefined') ? APPS_SCRIPT_URL : '';
+  var OTR_URL = URL_BASE + '?token=' + encodeURIComponent(TOKEN) + '&action=readOTRPositions';
+
+  window._otrPositions = { map: {}, lastRefreshed: null };
+
+  function fetchOTRPositions() {
+    fetch(OTR_URL, { cache: 'no-store' })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.error) { console.warn('[OTR] fetch error:', data.error); return; }
+        if (!data.header || !data.rows) return;
+
+        var idIdx       = data.header.indexOf('DriverID');
+        var cityIdx     = data.header.indexOf('StopCity');
+        var stateIdx    = data.header.indexOf('StopState');
+        var milesIdx    = data.header.indexOf('MilesToGo');
+        var ignitionIdx = data.header.indexOf('IgnitionState');
+
+        var map = {};
+        data.rows.forEach(function(r) {
+          var id = r[idIdx];
+          if (!id) return;
+          map[id] = {
+            city:     r[cityIdx]     || '',
+            state:    r[stateIdx]    || '',
+            miles:    r[milesIdx],
+            ignition: r[ignitionIdx] || ''
+          };
+        });
+        window._otrPositions = { map: map, lastRefreshed: data.lastRefreshed };
+        injectOTRPositions();
+      })
+      .catch(function(e) { console.warn('[OTR] fetch failed:', e); });
+  }
+
+  function getDriverIdFromBlock(block) {
+    var metas = block.querySelectorAll('.driver-meta-item');
+    for (var i = 0; i < metas.length; i++) {
+      var txt = metas[i].textContent || '';
+      if (txt.trim().indexOf('ID:') === 0) {
+        var s = metas[i].querySelector('span');
+        if (s) return (s.textContent || '').trim();
+      }
+    }
+    // Fallback: parse from the block id (format: db-ip-{driverId}-{movement} or db-{driverId}-{movement})
+    var domId = block.id || '';
+    var m = domId.match(/^db-(?:ip-)?([^-]+)-/);
+    return m ? m[1] : null;
+  }
+
+  function otrTabActive() {
+    var active = document.querySelector('.tab.active');
+    if (!active) return false;
+    return (active.getAttribute('data-role') || '').toLowerCase() === 'otr';
+  }
+
+  function injectOTRPositions() {
+    if (!otrTabActive()) return;
+    var map = window._otrPositions.map || {};
+    var blocks = document.querySelectorAll('.driver-block');
+    blocks.forEach(function(block) {
+      // Remove any prior chip so we don't stack
+      var existing = block.querySelector('.next-stop-chip');
+      if (existing) existing.remove();
+
+      var driverId = getDriverIdFromBlock(block);
+      if (!driverId) return;
+      var pos = map[driverId];
+      if (!pos) return;
+
+      var stopped = (pos.ignition === 'STOPPED');
+      var milesText = (pos.miles === null || pos.miles === '' || isNaN(pos.miles))
+        ? '—'
+        : pos.miles;
+
+      var chip = document.createElement('span');
+      chip.className = 'next-stop-chip' + (stopped ? ' stopped' : '');
+      chip.innerHTML =
+        '<span class="ns-icon">' + (stopped ? '⏸' : '🚚') + '</span>' +
+        'Next Stop: <span class="ns-city">' + pos.city + ', ' + pos.state + '</span>' +
+        ' · Miles to go:<span class="ns-miles">' + milesText + '</span>';
+
+      // Insert after the X-of-Y progress pill; if not present, append to header
+      var progress = block.querySelector('.driver-progress');
+      var header = block.querySelector('.driver-header');
+      if (progress && progress.parentNode) {
+        progress.parentNode.insertBefore(chip, progress.nextSibling);
+      } else if (header) {
+        header.appendChild(chip);
+      }
+    });
+  }
+
+  // Re-inject whenever the board DOM changes (renders, refreshes, tab switches)
+  function initObserver() {
+    var board = document.getElementById('board');
+    if (!board) { setTimeout(initObserver, 500); return; }
+    var obs = new MutationObserver(function() {
+      if (window._otrPositions) injectOTRPositions();
+    });
+    obs.observe(board, { childList: true, subtree: true });
+  }
+
+  // Kick off after initial page load and auth
+  function boot() {
+    fetchOTRPositions();
+    setInterval(fetchOTRPositions, 3 * 60 * 1000); // 3 min, matches board cadence
+    initObserver();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(boot, 2000); });
+  } else {
+    setTimeout(boot, 2000);
+  }
+})();
+</script>
 </body>
 </html>
