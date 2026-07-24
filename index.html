@@ -99,8 +99,9 @@
     font-family: var(--font-mono); font-weight: 600; cursor: pointer;
     display: none; outline: none;
   }
-  .archive-dropdown:focus { border-color: #4ade80; }
-  .archive-dropdown option { background: var(--surface); color: var(--text); }
+.archive-dropdown:focus { border-color: #4ade80; }
+  .future-dropdown { border-color: #d97706; color: #fcd34d; }
+  .future-dropdown:focus { border-color: #f59e0b; }  .archive-dropdown option { background: var(--surface); color: var(--text); }
 
   /* FUEL MAP BUTTON */
 .fuel-map-btn {
@@ -371,7 +372,10 @@
         <span class="btn-text">↻ Refresh Board</span>
       </button>
       <span class="refresh-status" id="refreshStatus" style="display:none">Pulling data… up to 30s</span>
-      <select class="archive-dropdown" id="archiveDropdown" onchange="onArchiveSelect(this.value)">
+<select class="archive-dropdown" id="archiveDropdown" onchange="onArchiveSelect(this.value)">
+        <option value="">📅 Live — Today</option>
+      </select>
+      <select class="archive-dropdown future-dropdown" id="futureDropdown" onchange="onFutureSelect(this.value)">
         <option value="">📅 Live — Today</option>
       </select>
       <a class="fuel-map-btn" href="https://fuel-price-map.pages.dev/" target="_blank" rel="noopener">⛽ Fuel Map</a>
@@ -474,6 +478,10 @@ let autoRefreshTimer = null;
 let selectedArchiveDate = null;
 let archiveCompletedData = null;
 let archiveInProgressData = null;
+let selectedFutureDay = null;
+const PLANNING_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwHh7gHEFs9TFFxAhspSC22jCTKnO65eo2son0Cq8SiU9JsuWXa1PnCXrD8--nhdxv8mw/exec";
+const DAY_NAMES = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  
 
 async function doLogin() {
   const u = document.getElementById("loginUser").value.trim();
@@ -528,9 +536,11 @@ if (sessionStorage.getItem("norlo_token")) {
 function switchTab(el) {
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   el.classList.add("active");
-  currentRole = el.dataset.role;
+currentRole = el.dataset.role;
   const btn = document.getElementById("refreshBtn");
   const dropdown = document.getElementById("archiveDropdown");
+  selectedFutureDay = null;
+  document.getElementById("futureDropdown").value = "";
   if (currentRole === "completed") {
     btn.classList.add("completed-refresh");
     btn.querySelector(".btn-text").textContent = "↻ Refresh Completed";
@@ -760,7 +770,8 @@ function renderArchive() {
 }
 
 async function loadData(preserveScroll = false) {
-  if (selectedArchiveDate) return;
+  buildFutureOptions();
+  if (selectedArchiveDate || selectedFutureDay !== null) return;
   const savedScroll = preserveScroll ? window.scrollY : 0;
   if (!preserveScroll) showLoading();
   try {
@@ -836,6 +847,8 @@ function parseRows(rows) {
 }
 
 async function triggerRefresh() {
+  selectedFutureDay = null;
+  document.getElementById("futureDropdown").value = "";
   const btn = document.getElementById("refreshBtn");
   const status = document.getElementById("refreshStatus");
   const dropdown = document.getElementById("archiveDropdown");
@@ -869,8 +882,46 @@ async function triggerRefresh() {
   }
 }
 
-function scheduleAutoRefresh() {
+function buildFutureOptions() {
+  const sel = document.getElementById("futureDropdown");
+  if (!sel) return;
+  if (sel.options.length === 1) {
+    for (let i = 1; i <= 6; i++) {
+      const d = new Date(); d.setDate(d.getDate() + i);
+      const opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = `📅 ${DAY_NAMES[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}`;
+      sel.appendChild(opt);
+    }
+  }
+  sel.style.display = (currentRole === "ltl") ? "inline-block" : "none";
+}
+
+async function onFutureSelect(dayVal) {
+  if (dayVal === "") {
+    selectedFutureDay = null;
+    loadData();
+    return;
+  }
+  selectedFutureDay = parseInt(dayVal);
   clearTimeout(autoRefreshTimer);
+  showLoading();
+  try {
+    const url = `${PLANNING_SCRIPT_URL}?token=${encodeURIComponent(API_TOKEN)}&action=readBoardDay&day=${selectedFutureDay}&role=ltl`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+    boardData = parseRows(json.rows || []);
+    renderBoard(boardData);
+    const sel = document.getElementById("futureDropdown");
+    document.getElementById("lastUpdated").textContent = "Planned: " + sel.selectedOptions[0].textContent.replace("📅 ", "");
+  } catch (err) {
+    showError(err.message);
+  }
+}
+
+function scheduleAutoRefresh() {  clearTimeout(autoRefreshTimer);
   autoRefreshTimer = setTimeout(() => loadData(true), 180000);
 }
 
