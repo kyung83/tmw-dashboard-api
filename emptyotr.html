@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OTR Empty Drivers — Outbound</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; background:#f1f3f4; font-family:Arial,Helvetica,sans-serif; font-size:13px; color:#202124; }
+
+  .banner { background:#fff3cd; border-bottom:1px solid #e0c97f; color:#7a5c00;
+            font-size:12px; font-weight:bold; padding:6px 14px; letter-spacing:.3px; }
+
+  .topbar { background:#fff; border-bottom:1px solid #d0d3d6; padding:10px 14px;
+            display:flex; align-items:baseline; gap:14px; position:sticky; top:0; z-index:20; }
+  .topbar h1 { font-size:15px; margin:0; letter-spacing:.4px; }
+  .topbar .wk { font-size:12px; color:#5f6368; }
+  .topbar .stamp { margin-left:auto; font-size:11px; color:#80868b; }
+
+  .wrap { padding:14px; max-width:860px; }
+
+  .counts { background:#fff; border:1px solid #d0d3d6; padding:8px 10px; margin-bottom:16px;
+            font-size:12px; color:#3c4043; }
+  .counts b { color:#202124; }
+
+  .day-block { background:#fff; border:1px solid #d0d3d6; margin-bottom:16px;
+               content-visibility:auto; contain-intrinsic-size:auto 320px; }
+
+  .sect-hdr { background:#274e13; color:#fff; font-size:12px; font-weight:bold;
+              letter-spacing:.8px; padding:5px 8px; display:flex; }
+  .sect-hdr .hz { margin-left:auto; font-weight:normal; opacity:.85; font-size:11px; }
+
+  table { width:100%; border-collapse:collapse; table-layout:fixed; }
+  thead th { background:#d9ead3; border:1px solid #b7c9ae; font-size:12px; font-weight:bold;
+             text-align:left; padding:4px 6px; white-space:nowrap; }
+  thead th.dayname { background:#b6d7a8; }
+
+  tbody td { border:1px solid #dadce0; padding:3px 6px; height:22px; vertical-align:top;
+             overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  tbody tr:nth-child(even) td { background:#fafafa; }
+  tbody td.loc { font-weight:bold; }
+  tbody td.cov { text-align:center; font-weight:bold; }
+  tbody tr.open td.loc { box-shadow: inset 3px 0 0 #c5221f; }
+  tbody tr.unplanned td { color:#80868b; }
+  tbody tr.unplanned td.cov::after { content:'—'; color:#bdc1c6; }
+  .day-block td[colspan] { width:auto; }
+
+  .msg { padding:14px 8px; font-size:12px; color:#80868b; font-style:italic; }
+  .msg.err { color:#a50e0e; font-style:normal; }
+  .legend { font-size:11px; color:#5f6368; padding:6px 2px 0; }
+</style>
+</head>
+<body>
+
+<div class="banner">UNDER CONSTRUCTION — OUTBOUND (LEFT) SIDE ONLY · ETA COLUMN NOT YET POPULATED</div>
+
+<div class="topbar">
+  <h1>OTR EMPTY DRIVERS — OUTBOUND</h1>
+  <span class="wk" id="weeklabel"></span>
+  <span class="stamp" id="stamp">loading…</span>
+</div>
+
+<div class="wrap">
+  <div class="counts" id="counts">Loading 14 day tabs…</div>
+  <div id="board"></div>
+  <div class="legend">
+    Red bar = OPEN (no follow-on movement booked). Grey row = movement ends past the
+    ~7-day OTR planning horizon, where blank Covered means unplanned, not open.
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG — matches planning code.gs contract
+   action=readplanningday, param day=0..13, returns {day, rows:[[...]]}
+   ============================================================ */
+const API_BASE  = 'https://script.google.com/macros/s/AKfycbwHh7gHEFs9TFFxAhspSC22jCTKnO65eo2son0Cq8SiU9JsuWXa1PnCXrD8--nhdxv8mw/exec';
+const API_TOKEN = '8U+54ldJ0U5V4pmac7gA8ez+yhsN01MW/jECyMYsrCU=';
+
+const DAY_TABS = 14;                        // Day0 .. Day13
+const TODAY    = new Date(2026, 6, 24);     // Day0 anchor — Fri 7/24/26
+const WEEK_START = new Date(2026, 6, 26);   // Sun 7/26/26
+const OTR_HORIZON_DAYS = 7;
+
+// Positional column map — payload rows are bare arrays, no header.
+const COL = {
+  RoleBucket: 0, DriverID: 4, DriverName: 5, OrderNumber: 6, EventCode: 7,
+  StopCompany: 8, City: 9, State: 10, Arrival: 12, Departure: 13,
+  Est: 14, Dep: 15, StopSeq: 20, MovementNum: 21, DepartedFromYard: 22
+};
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function cell(r, name) { const v = r[COL[name]]; return v == null ? '' : String(v).trim(); }
+function parseTS(s) {
+  if (!s) return null;
+  const m = String(s).match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  return m ? new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5]) : null;
+}
+function dateKey(d) {
+  return d ? d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' +
+             String(d.getDate()).padStart(2,'0') : '';
+}
+function hhmm(d) {
+  if (!d) return '';
+  let h = d.getHours(); const mm = String(d.getMinutes()).padStart(2,'0');
+  const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+  return h + ':' + mm + ' ' + ap;
+}
+function titleName(lf) {
+  return (lf || '').split(',')
+    .map(p => p.trim().replace(/\b[\w']+/g, w => w[0] + w.slice(1).toLowerCase()))
+    .join(', ');
+}
+function isRealDriver(name, id) {
+  if (!name) return false;
+  if (name.toUpperCase().replace(/\s+/g,'').includes(',MOCK')) return false;
+  if ((id || '').toUpperCase() === 'STIST') return false;
+  return true;
+}
+
+/* ============================================================
+   DERIVATION
+   ============================================================ */
+function buildUniverse(dayPayloads) {
+  const seen = new Map();
+  for (const p of dayPayloads) {
+    if (!p || !p.rows) continue;
+    for (const r of p.rows) {
+      if (cell(r,'RoleBucket').toUpperCase() !== 'OTR') continue;
+      const id = cell(r,'DriverID'), name = cell(r,'DriverName'), mov = cell(r,'MovementNum');
+      if (!isRealDriver(name, id) || !mov || mov === '0') continue;
+      // TMW stub with no real leg
+      if (cell(r,'StopCompany').toUpperCase().startsWith('N/A')) continue;
+
+      const key = id + '|' + mov + '|' + cell(r,'StopSeq');
+      if (seen.has(key)) continue;
+      seen.set(key, {
+        driverId: id, driverName: name, mov: mov,
+        seq: +cell(r,'StopSeq') || 0,
+        event: cell(r,'EventCode').toUpperCase(),
+        city: cell(r,'City'), state: cell(r,'State'),
+        arrival: parseTS(cell(r,'Arrival')),
+        departure: parseTS(cell(r,'Departure')),
+        est: cell(r,'Est').toUpperCase(), dep: cell(r,'Dep').toUpperCase(),
+        departedYard: cell(r,'DepartedFromYard')
+      });
+    }
+  }
+  return Array.from(seen.values());
+}
+
+function deriveEmpties(stops) {
+  const drivers = new Map();
+  for (const s of stops) {
+    if (!drivers.has(s.driverId)) drivers.set(s.driverId, { name: s.driverName, movs: new Map() });
+    const dm = drivers.get(s.driverId).movs;
+    if (!dm.has(s.mov)) dm.set(s.mov, []);
+    dm.get(s.mov).push(s);
+  }
+
+  const horizonEdge = new Date(TODAY);
+  horizonEdge.setDate(horizonEdge.getDate() + OTR_HORIZON_DAYS);
+
+  const empties = [];
+  let activeCount = 0, openCount = 0;
+
+  for (const [id, d] of drivers) {
+    const movs = [];
+    for (const [mov, list] of d.movs) {
+      list.sort((a,b) => a.seq - b.seq);
+      const first = list[0], last = list[list.length - 1];
+      const started = list.some(s => s.est === 'A' || s.dep === 'A' || !!s.departedYard);
+      movs.push({
+        mov: mov, started: started,
+        startAt: first.arrival || first.departure,
+        endAt: last.arrival || last.departure,
+        last: last
+      });
+    }
+    movs.sort((a,b) => (a.startAt || 0) - (b.startAt || 0));
+    if (movs.some(m => m.started)) activeCount++;
+
+    for (const m of movs) {
+      if (!m.endAt || !m.last.city) continue;
+      const covered = movs.some(o => o.mov !== m.mov && o.startAt && o.startAt >= m.endAt);
+      const beyond = m.endAt > horizonEdge;
+      if (!covered && !beyond && m.started) openCount++;
+
+      empties.push({
+        dateKey:  dateKey(m.endAt),
+        location: m.last.state ? (m.last.city + ', ' + m.last.state) : m.last.city,
+        driver:   titleName(d.name),
+        covered:  covered ? 'Y' : '',
+        appt:     hhmm(m.last.arrival),
+        beyond:   beyond,
+        open:     !covered && !beyond
+      });
+    }
+  }
+
+  empties.sort((a,b) => a.location.localeCompare(b.location));
+  return { empties, activeCount, openCount, driverCount: drivers.size };
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+const DAYNAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+function blockHTML(date, body, beyond) {
+  const label = DAYNAMES[date.getDay()] + ' ' + (date.getMonth()+1) + '/' + date.getDate();
+  const hz = beyond ? '<span class="hz">beyond planning horizon</span>' : '';
+  return '<div class="day-block">' +
+    '<div class="sect-hdr">OTR &ndash; OUTBOUND' + hz + '</div>' +
+    '<table><colgroup><col style="width:220px"><col style="width:180px">' +
+    '<col style="width:75px"><col style="width:100px"><col></colgroup>' +
+    '<thead><tr><th class="dayname">' + label + '</th><th>Driver</th>' +
+    '<th>Covered</th><th>APPT</th><th>ETA</th></tr></thead>' +
+    '<tbody>' + body + '</tbody></table></div>';
+}
+
+function rowsHTML(list) {
+  if (!list.length) return '<tr><td colspan="5" class="msg">No rows</td></tr>';
+  return list.map(r => {
+    const cls = r.beyond ? 'unplanned' : (r.open ? 'open' : '');
+    return '<tr class="' + cls + '">' +
+      '<td class="loc">' + r.location + '</td><td>' + r.driver + '</td>' +
+      '<td class="cov">' + r.covered + '</td><td>' + r.appt + '</td><td></td></tr>';
+  }).join('');
+}
+
+async function fetchDay(idx) {
+  const url = API_BASE + '?token=' + encodeURIComponent(API_TOKEN) +
+              '&action=readplanningday&day=' + idx;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const j = await res.json();
+  if (j.error) throw new Error(j.error);
+  return j;                                   // { day, rows:[[...]] }
+}
+
+async function build() {
+  const end = new Date(WEEK_START); end.setDate(end.getDate() + 6);
+  document.getElementById('weeklabel').textContent =
+    'Week of ' + (WEEK_START.getMonth()+1) + '/' + WEEK_START.getDate() +
+    ' \u2013 ' + (end.getMonth()+1) + '/' + end.getDate() + '/26';
+
+  const failures = [];
+  const jobs = [];
+  for (let i = 0; i < DAY_TABS; i++)
+    jobs.push(fetchDay(i).catch(e => { failures.push('Day' + i + ': ' + e.message); return null; }));
+  const payloads = await Promise.all(jobs);
+
+  if (failures.length === DAY_TABS) {
+    document.getElementById('counts').innerHTML =
+      '<span style="color:#a50e0e">All 14 tabs failed. First error: ' + failures[0] + '</span>';
+    document.getElementById('stamp').textContent = 'failed';
+    return;
+  }
+
+  const universe = buildUniverse(payloads);
+  const res = deriveEmpties(universe);
+
+  document.getElementById('counts').innerHTML =
+    '<b>' + res.driverCount + '</b> OTR drivers &middot; ' +
+    '<b>' + res.activeCount + '</b> with an active movement &middot; ' +
+    '<b>' + res.openCount + '</b> OPEN (no follow-on, inside horizon) &middot; ' +
+    universe.length + ' deduped stops from ' +
+    payloads.filter(Boolean).length + '/' + DAY_TABS + ' tabs' +
+    (failures.length ? ' &middot; <span style="color:#a50e0e">' + failures.length +
+      ' tab(s) failed</span>' : '');
+
+  const horizonEdge = new Date(TODAY);
+  horizonEdge.setDate(horizonEdge.getDate() + OTR_HORIZON_DAYS);
+
+  const parts = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(WEEK_START); d.setDate(d.getDate() + i);
+    const list = res.empties.filter(e => e.dateKey === dateKey(d));
+    parts.push(blockHTML(d, rowsHTML(list), d > horizonEdge));
+  }
+  document.getElementById('board').innerHTML = parts.join('');
+  document.getElementById('stamp').textContent = 'built ' + new Date().toLocaleTimeString();
+}
+
+build();
+</script>
+</body>
+</html>
