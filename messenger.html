@@ -9,7 +9,7 @@
     --bg:#0e1114; --panel:#161a1f; --panel-2:#1c2229; --line:#262d35;
     --ink:#e6ebf0; --ink-dim:#8b97a4; --ink-faint:#5d6874;
     --driver:#1f2a35; --dispatch:#1e3a2c; --system:#20242a;
-    --accent:#4ea3ff; --alert:#e0a33a; --good:#3fb96b;
+    --accent:#4ea3ff; --alert:#e0a33a; --bad:#c9483f;
     --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
     --sans:"Inter",-apple-system,"Segoe UI",Roboto,sans-serif;
   }
@@ -18,11 +18,10 @@
   body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans);overflow:hidden}
   button,input,textarea{font:inherit;color:inherit}
 
-  /* ---- shell ---- */
-  #app{display:grid;height:100%;grid-template-rows:auto 1fr}
+  #app{display:grid;height:100%;grid-template-rows:auto auto 1fr}
   header{display:flex;align-items:center;gap:14px;padding:10px 16px;
     background:var(--panel);border-bottom:1px solid var(--line)}
-  header h1{margin:0;font-size:14px;font-weight:600;letter-spacing:.03em}
+  header h1{margin:0;font-size:14px;font-weight:600;letter-spacing:.03em;white-space:nowrap}
   header .sub{color:var(--ink-faint);font-size:11px;font-family:var(--mono)}
   header .spacer{flex:1}
   header button{padding:6px 12px;background:var(--panel-2);border:1px solid var(--line);
@@ -30,17 +29,27 @@
   header button:hover{border-color:var(--accent)}
   #who{width:110px;padding:6px 10px;background:var(--panel-2);
     border:1px solid var(--line);border-radius:6px;outline:none;font-size:12px}
-  #who:focus{border-color:var(--accent)}
 
-  main{display:grid;grid-template-columns:290px 1fr;min-height:0}
+  #tabs{display:flex;gap:2px;padding:0 12px;background:var(--panel);
+    border-bottom:1px solid var(--line);overflow-x:auto}
+  .tab{padding:9px 14px;font-size:12.5px;color:var(--ink-dim);cursor:pointer;
+    border-bottom:2px solid transparent;white-space:nowrap}
+  .tab:hover{color:var(--ink)}
+  .tab.on{color:var(--ink);border-bottom-color:var(--accent)}
+  .tab .n{margin-left:6px;padding:1px 6px;border-radius:9px;font-size:10.5px;
+    font-family:var(--mono);background:var(--panel-2);color:var(--ink-faint)}
+  .tab.on .n{background:var(--accent);color:#08121c}
+  .tab .n.hot{background:var(--alert);color:#1a1200}
 
-  /* ---- driver list ---- */
+  main{display:grid;grid-template-columns:300px 1fr;min-height:0}
+
   #side{display:flex;flex-direction:column;min-height:0;
     background:var(--panel);border-right:1px solid var(--line)}
   #search{margin:10px;padding:8px 10px;background:var(--panel-2);border:1px solid var(--line);
     border-radius:6px;outline:none}
   #search:focus{border-color:var(--accent)}
   #list{flex:1;overflow-y:auto}
+
   .row{padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;
     border-left:3px solid transparent}
   .row:hover{background:var(--panel-2)}
@@ -54,15 +63,20 @@
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .row .when{margin-top:3px;font-family:var(--mono);font-size:10px;color:var(--ink-faint)}
   .row.wait .when{color:var(--alert)}
+  .row .thumbs{display:flex;gap:4px;margin-top:6px}
+  .row .thumbs img{width:38px;height:38px;object-fit:cover;border-radius:4px;
+    border:1px solid var(--line)}
 
-  /* ---- thread ---- */
   #pane{display:flex;flex-direction:column;min-height:0}
   #head{padding:12px 18px;border-bottom:1px solid var(--line);background:var(--panel);
-    display:flex;align-items:baseline}
+    display:flex;align-items:baseline;gap:8px}
   #head .nm{font-size:15px;font-weight:600}
-  #head .id{font-family:var(--mono);font-size:11px;color:var(--ink-faint);margin-left:8px}
-  #back{display:none;margin-right:10px;padding:4px 10px;background:var(--panel-2);
+  #head .id{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+  #head .role{font-size:10px;font-family:var(--mono);padding:2px 7px;border-radius:9px;
+    background:var(--panel-2);color:var(--ink-faint);letter-spacing:.06em}
+  #back{display:none;padding:4px 10px;background:var(--panel-2);
     border:1px solid var(--line);border-radius:6px;cursor:pointer;font-size:12px}
+
   #turns{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:10px}
   .msg{max-width:64%;padding:9px 13px;border-radius:12px;white-space:pre-wrap;
     word-break:break-word;font-size:13.5px}
@@ -71,8 +85,16 @@
   .out{align-self:flex-end;background:var(--dispatch);border-bottom-right-radius:3px}
   .sys{align-self:center;max-width:78%;background:var(--system);color:var(--ink-dim);
     border:1px solid var(--line);border-radius:7px;font-size:12.5px}
-  .sys .tag{display:block;margin-bottom:5px;font-family:var(--mono);font-size:9.5px;
+  .tag{display:block;margin-bottom:5px;font-family:var(--mono);font-size:9.5px;
     letter-spacing:.09em;color:var(--ink-faint)}
+  .undelivered{border:1px solid var(--bad)}
+  .undelivered .warn{display:block;margin-top:6px;font-size:10.5px;font-family:var(--mono);
+    color:var(--bad);letter-spacing:.04em}
+
+  .photos{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .photos img{width:132px;height:132px;object-fit:cover;border-radius:6px;
+    border:1px solid var(--line);cursor:pointer;background:var(--panel-2)}
+  .photos img:hover{border-color:var(--accent)}
 
   #compose{padding:12px 18px;border-top:1px solid var(--line);background:var(--panel);
     display:flex;gap:10px;align-items:flex-end}
@@ -84,11 +106,10 @@
   #send:disabled{opacity:.4;cursor:default}
   #hint{padding:0 18px 10px;font-size:11px;color:var(--ink-faint);background:var(--panel)}
 
-  .blank{margin:auto;color:var(--ink-faint);font-size:13px;text-align:center}
+  .blank{margin:auto;color:var(--ink-faint);font-size:13px;text-align:center;padding:40px 20px}
   ::-webkit-scrollbar{width:9px}
   ::-webkit-scrollbar-thumb{background:#2b333c;border-radius:5px}
 
-  /* ---- narrow: Front sidebar / phone ---- */
   @media (max-width:700px){
     main{grid-template-columns:1fr}
     #side{grid-column:1;grid-row:1}
@@ -98,6 +119,7 @@
     .msg{max-width:88%}
     #back{display:inline-block}
     header h1{display:none}
+    .photos img{width:100px;height:100px}
   }
 </style>
 </head>
@@ -108,9 +130,17 @@
     <h1>Driver Messenger</h1>
     <span class="sub" id="stat">loading…</span>
     <span class="spacer"></span>
-    <button onclick="loadThreads(true)">Refresh</button>
+    <button onclick="reload(true)">Refresh</button>
     <input id="who" placeholder="Your initials" oninput="saveWho()">
   </header>
+
+  <div id="tabs">
+    <div class="tab on" data-tab="all"        onclick="setTab('all')">All<span class="n" id="n-all">–</span></div>
+    <div class="tab"    data-tab="needsreply" onclick="setTab('needsreply')">Needs Reply<span class="n" id="n-needsreply">–</span></div>
+    <div class="tab"    data-tab="securement" onclick="setTab('securement')">Securement<span class="n" id="n-securement">–</span></div>
+    <div class="tab"    data-tab="flat"       onclick="setTab('flat')">Flatbed<span class="n" id="n-flat">–</span></div>
+    <div class="tab"    data-tab="dv"         onclick="setTab('dv')">Dry Van<span class="n" id="n-dv">–</span></div>
+  </div>
 
   <main>
     <div id="side">
@@ -121,7 +151,9 @@
     <div id="pane">
       <div id="head" style="display:none">
         <button id="back" onclick="backToList()">←</button>
-        <span class="nm" id="hNm"></span><span class="id" id="hId"></span>
+        <span class="nm" id="hNm"></span>
+        <span class="id" id="hId"></span>
+        <span class="role" id="hRole"></span>
       </div>
       <div id="turns"><div class="blank">Pick a driver to see the conversation.</div></div>
       <div id="compose" style="display:none">
@@ -136,14 +168,15 @@
 
 <script>
 /* ── config ───────────────────────────────────────────────────────────── */
-var API   = "https://script.google.com/macros/s/AKfycbwebUzD1R2EyGryuFOhmTrl9V3nPElvT2OLW6JRrQ9hhaNyB_1eLh4j6JbOLM2aPyYP/exec";   // ends in /exec
+var API   = "https://script.google.com/macros/s/AKfycbwebUzD1R2EyGryuFOhmTrl9V3nPElvT2OLW6JRrQ9hhaNyB_1eLh4j6JbOLM2aPyYP/exec";
 var TOKEN = "NorloDriverMsg2026";
 
-var LIST_MS   = 60000;   // driver list refresh
-var THREAD_MS = 20000;   // open conversation refresh
+var LIST_MS   = 60000;
+var THREAD_MS = 20000;
 
 /* ── state ────────────────────────────────────────────────────────────── */
-var threads = [], current = null, sender = "", listTimer, threadTimer;
+var tab = "all", threads = [], secItems = [], counts = {};
+var current = null, sender = "", listTimer, threadTimer;
 
 /* ── boot ─────────────────────────────────────────────────────────────── */
 function saveWho(){
@@ -154,13 +187,14 @@ function saveWho(){
 function start(){
   sender = localStorage.getItem("norlo_who") || "";
   document.getElementById("who").value = sender;
-  loadThreads(true);
-  listTimer = setInterval(function(){ loadThreads(false); }, LIST_MS);
+  tab = localStorage.getItem("norlo_tab") || "all";
+  paintTabs();
+  reload(true);
+  listTimer = setInterval(function(){ reload(false); }, LIST_MS);
 
   var d = new URLSearchParams(location.search).get("driver");
-  if (d) setTimeout(function(){ openThread(d.toUpperCase()); }, 800);
+  if (d) setTimeout(function(){ openThread(d.toUpperCase()); }, 900);
 }
-
 start();
 
 /* ── data ─────────────────────────────────────────────────────────────── */
@@ -172,20 +206,133 @@ function call(params){
     .then(function(r){ return r.json(); });
 }
 
-function loadThreads(loud){
+function reload(loud){
   if (loud) document.getElementById("stat").textContent = "loading…";
-  call({action:"threads"}).then(function(d){
-    if (d.error) throw new Error(d.error);
-    threads = d.threads || [];
-    var waiting = threads.filter(function(t){ return t.needsReply; }).length;
-    document.getElementById("stat").textContent =
-      threads.length + " drivers · " + waiting + " awaiting reply · " + clock();
-    renderList();
-  }).catch(function(e){
-    document.getElementById("stat").textContent = "error: " + e.message;
+
+  Promise.all([ call({action:"threads"}), call({action:"securement"}) ])
+    .then(function(res){
+      var t = res[0], s = res[1];
+      if (t.error) throw new Error(t.error);
+
+      threads  = t.threads || [];
+      secItems = (s && s.items) || [];
+
+      counts = {
+        all:        threads.length,
+        needsreply: threads.filter(function(x){ return x.needsReply; }).length,
+        securement: (s && s.open) || 0,
+        flat:       threads.filter(function(x){ return x.role === "FLAT"; }).length,
+        dv:         threads.filter(function(x){ return x.role === "DV"; }).length
+      };
+
+      document.getElementById("stat").textContent =
+        counts.all + " drivers · " + counts.needsreply + " awaiting reply · " +
+        counts.securement + " securement open · " + clock();
+
+      paintTabs();
+      renderList();
+    })
+    .catch(function(e){
+      document.getElementById("stat").textContent = "error: " + e.message;
+    });
+}
+
+function setTab(t){
+  tab = t;
+  localStorage.setItem("norlo_tab", t);
+  document.getElementById("search").value = "";
+  paintTabs();
+  renderList();
+}
+
+function paintTabs(){
+  [].forEach.call(document.querySelectorAll(".tab"), function(el){
+    var k = el.getAttribute("data-tab");
+    el.classList.toggle("on", k === tab);
+    var n = document.getElementById("n-" + k);
+    if (n && counts[k] !== undefined){
+      n.textContent = counts[k];
+      n.classList.toggle("hot", (k === "needsreply" || k === "securement") && counts[k] > 0);
+    }
   });
 }
 
+/* ── list ─────────────────────────────────────────────────────────────── */
+function renderList(){
+  var q  = document.getElementById("search").value.trim().toLowerCase();
+  var el = document.getElementById("list");
+
+  if (tab === "securement"){
+    var items = secItems.filter(function(s){
+      if (!q) return true;
+      return (s.driverName||"").toLowerCase().indexOf(q) > -1 ||
+             (s.driverId||"").toLowerCase().indexOf(q) > -1 ||
+             String(s.order||"").indexOf(q) > -1;
+    });
+
+    if (!items.length){
+      el.innerHTML = '<div class="blank">No securement submissions.</div>';
+      return;
+    }
+
+    el.innerHTML = items.map(function(s, idx){
+      var cls = "row" + (s.answered ? "" : " wait") +
+                (s.driverId === current ? " on" : "");
+      var thumbs = (s.photos||[]).slice(0,4).map(function(p){
+        return '<img src="' + p.thumb + '" loading="lazy" alt="">';
+      }).join("");
+      return '<div class="' + cls + '" onclick="openSec(' + idx + ')">' +
+               '<div class="top">' +
+                 '<span class="nm">' + esc(pretty(s.driverName || s.driverId)) + '</span>' +
+                 '<span class="id">' + esc(s.driverId) + '</span>' +
+               '</div>' +
+               '<div class="pv">Order ' + esc(s.order || '—') + ' · ' +
+                 (s.photos||[]).length + ' photo' +
+                 ((s.photos||[]).length === 1 ? '' : 's') + '</div>' +
+               (thumbs ? '<div class="thumbs">' + thumbs + '</div>' : '') +
+               '<div class="when">' + when(s.at) +
+                 (s.answered ? '' : ' · needs review') + '</div>' +
+             '</div>';
+    }).join("");
+    window._secShown = items;
+    return;
+  }
+
+  var show = threads.filter(function(t){
+    if (tab === "needsreply" && !t.needsReply) return false;
+    if (tab === "flat" && t.role !== "FLAT")   return false;
+    if (tab === "dv"   && t.role !== "DV")     return false;
+    if (!q) return true;
+    return (t.driverName||"").toLowerCase().indexOf(q) > -1 ||
+           (t.driverId||"").toLowerCase().indexOf(q) > -1;
+  });
+
+  if (!show.length){
+    el.innerHTML = '<div class="blank">Nothing here.</div>';
+    return;
+  }
+
+  el.innerHTML = show.map(function(t){
+    var cls = "row" + (t.needsReply ? " wait" : "") +
+              (t.driverId === current ? " on" : "");
+    return '<div class="' + cls + '" onclick="openThread(\'' + t.driverId + '\')">' +
+             '<div class="top">' +
+               '<span class="nm">' + esc(pretty(t.driverName || t.driverId)) + '</span>' +
+               '<span class="id">' + esc(t.driverId) + '</span>' +
+             '</div>' +
+             '<div class="pv">' + esc(t.last || "") + '</div>' +
+             '<div class="when">' + when(t.lastAt) +
+               (t.needsReply ? " · awaiting reply" : "") + '</div>' +
+           '</div>';
+  }).join("");
+}
+
+function openSec(idx){
+  var s = (window._secShown || [])[idx];
+  if (s) openThread(s.driverId);
+}
+
+/* ── thread ───────────────────────────────────────────────────────────── */
 function openThread(id){
   current = id;
   document.body.classList.add("viewing");
@@ -209,40 +356,12 @@ function fetchThread(id, scroll){
     document.getElementById("head").style.display    = "flex";
     document.getElementById("compose").style.display = "flex";
     document.getElementById("hint").style.display    = "block";
-    document.getElementById("hNm").textContent = pretty(d.driverName || t.driverName || id);
-    document.getElementById("hId").textContent = id;
+    document.getElementById("hNm").textContent   = pretty(d.driverName || t.driverName || id);
+    document.getElementById("hId").textContent   = id;
+    document.getElementById("hRole").textContent =
+      d.role === "FLAT" ? "FLATBED" : d.role === "DV" ? "DRY VAN" : "";
     renderTurns(d.turns || [], scroll);
   });
-}
-
-/* ── render ───────────────────────────────────────────────────────────── */
-function renderList(){
-  var q = document.getElementById("search").value.trim().toLowerCase();
-  var el = document.getElementById("list");
-
-  var show = threads.filter(function(t){
-    if (!q) return true;
-    return (t.driverName||"").toLowerCase().indexOf(q) > -1 ||
-           (t.driverId||"").toLowerCase().indexOf(q) > -1;
-  });
-
-  if (!show.length){
-    el.innerHTML = '<div class="blank" style="padding:30px 14px">No drivers match.</div>';
-    return;
-  }
-
-  el.innerHTML = show.map(function(t){
-    var cls = "row" + (t.needsReply ? " wait" : "") + (t.driverId === current ? " on" : "");
-    return '<div class="' + cls + '" onclick="openThread(\'' + t.driverId + '\')">' +
-             '<div class="top">' +
-               '<span class="nm">' + esc(pretty(t.driverName || t.driverId)) + '</span>' +
-               '<span class="id">' + esc(t.driverId) + '</span>' +
-             '</div>' +
-             '<div class="pv">' + esc(t.last || "") + '</div>' +
-             '<div class="when">' + when(t.lastAt) +
-               (t.needsReply ? " · awaiting reply" : "") + '</div>' +
-           '</div>';
-  }).join("");
 }
 
 function renderTurns(turns, scroll){
@@ -253,12 +372,27 @@ function renderTurns(turns, scroll){
   }
 
   el.innerHTML = turns.map(function(t){
-    var sys = isSystem(t.text);
-    var who = t.direction === "IN" ? "in" : "out";
-    var cls = sys ? "msg sys" : "msg " + who;
-    var tag = sys ? '<span class="tag">' + sysLabel(t.text) + '</span>' : "";
-    var by  = t.direction === "IN" ? "driver" : shortMail(t.sender);
-    return '<div class="' + cls + '">' + tag + esc(t.text) +
+    var kind = t.kind || "MSG";
+    var sys  = (kind !== "MSG");
+    var cls  = sys ? "msg sys" : "msg " + (t.direction === "IN" ? "in" : "out");
+    if (!t.delivered) cls += " undelivered";
+
+    var tag = sys ? '<span class="tag">' + label(kind) +
+                    (t.order ? '  ·  ORDER ' + esc(t.order) : '') + '</span>' : "";
+
+    var pics = (t.photos && t.photos.length)
+      ? '<div class="photos">' + t.photos.map(function(p){
+          return '<img src="' + p.thumb + '" loading="lazy" alt="" ' +
+                 'onclick="window.open(\'' + p.full + '\',\'_blank\')">';
+        }).join("") + '</div>'
+      : "";
+
+    var warn = t.delivered ? "" :
+      '<span class="warn">⚠ Not delivered — replies to securement email don\'t reach the driver</span>';
+
+    var by = t.direction === "IN" ? "driver" : shortMail(t.sender);
+
+    return '<div class="' + cls + '">' + tag + esc(t.text) + pics + warn +
              '<div class="meta">' + when(t.at) + (by ? " · " + esc(by) : "") + '</div>' +
            '</div>';
   }).join("");
@@ -279,7 +413,7 @@ function send(){
     if (d.error) throw new Error(d.error);
     box.value = ""; grow(box);
     fetchThread(current, true);
-    loadThreads(false);
+    reload(false);
   }).catch(function(e){
     alert("Didn't send: " + e.message);
   }).then(function(){
@@ -297,14 +431,12 @@ function grow(el){
 }
 
 /* ── helpers ──────────────────────────────────────────────────────────── */
-function isSystem(s){
-  return /^(Incident Submitted|Changes for Order|ALERT!|ASR is updated)/i.test(s || "");
-}
-function sysLabel(s){
-  if (/^Incident Submitted/i.test(s)) return "COACHING";
-  if (/^ALERT!/i.test(s))             return "TRIP ALERT";
-  if (/^Changes for Order/i.test(s))  return "DISPATCH UPDATE";
-  return "SYSTEM";
+function label(k){
+  return k === "COACHING"   ? "COACHING"
+       : k === "TRIP"       ? "TRIP UPDATE"
+       : k === "SECUREMENT" ? "LOAD SECUREMENT"
+       : k === "FEEDBACK"   ? "DRIVER FEEDBACK"
+       : "SYSTEM";
 }
 function pretty(n){
   if (!n) return "";
@@ -313,14 +445,13 @@ function pretty(n){
 }
 function shortMail(s){
   var m = String(s || "").match(/[\w.\-+]+@/);
-  return m ? m[0].slice(0, -1) : "";
+  return m ? m[0].slice(0, -1) : (s || "");
 }
 function when(iso){
   if (!iso) return "";
   var d = new Date(iso);
   if (isNaN(d)) return "";
-  var now = new Date();
-  var sameDay = d.toDateString() === now.toDateString();
+  var sameDay = d.toDateString() === new Date().toDateString();
   var t = d.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
   return sameDay ? t : (d.getMonth()+1) + "/" + d.getDate() + " " + t;
 }
