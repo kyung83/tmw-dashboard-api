@@ -66,6 +66,12 @@
   .row .thumbs{display:flex;gap:4px;margin-top:6px}
   .row .thumbs img{width:38px;height:38px;object-fit:cover;border-radius:4px;
     border:1px solid var(--line)}
+  .row .act{display:flex;gap:6px;margin-top:7px}
+  .row .dis{padding:2px 9px;background:transparent;border:1px solid var(--line);
+    border-radius:5px;cursor:pointer;font-size:10.5px;font-family:var(--mono);
+    color:var(--ink-faint);letter-spacing:.04em}
+  .row .dis:hover{border-color:var(--alert);color:var(--alert)}
+  .row .dis:disabled{opacity:.45;cursor:default}
 
   #pane{display:flex;flex-direction:column;min-height:0}
   #head{padding:12px 18px;border-bottom:1px solid var(--line);background:var(--panel);
@@ -74,6 +80,11 @@
   #head .id{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
   #head .role{font-size:10px;font-family:var(--mono);padding:2px 7px;border-radius:9px;
     background:var(--panel-2);color:var(--ink-faint);letter-spacing:.06em}
+  #head .spacer{flex:1}
+  #dismiss{padding:5px 13px;background:var(--panel-2);border:1px solid var(--line);
+    border-radius:6px;cursor:pointer;font-size:12px;color:var(--ink-dim)}
+  #dismiss:hover{border-color:var(--alert);color:var(--alert)}
+  #dismiss:disabled{opacity:.45;cursor:default}
   #back{display:none;padding:4px 10px;background:var(--panel-2);
     border:1px solid var(--line);border-radius:6px;cursor:pointer;font-size:12px}
 
@@ -154,6 +165,8 @@
         <span class="nm" id="hNm"></span>
         <span class="id" id="hId"></span>
         <span class="role" id="hRole"></span>
+        <span class="spacer"></span>
+        <button id="dismiss" onclick="dismissCurrent()" style="display:none">Dismiss</button>
       </div>
       <div id="turns"><div class="blank">Pick a driver to see the conversation.</div></div>
       <div id="compose" style="display:none">
@@ -209,7 +222,7 @@ function call(params){
 function reload(loud){
   if (loud) document.getElementById("stat").textContent = "loading…";
 
-  Promise.all([ call({action:"threads"}), call({action:"securement"}) ])
+  return Promise.all([ call({action:"threads"}), call({action:"securement"}) ])
     .then(function(res){
       var t = res[0], s = res[1];
       if (t.error) throw new Error(t.error);
@@ -323,6 +336,10 @@ function renderList(){
              '<div class="pv">' + esc(t.last || "") + '</div>' +
              '<div class="when">' + when(t.lastAt) +
                (t.needsReply ? " · awaiting reply" : "") + '</div>' +
+             (t.needsReply
+               ? '<div class="act"><button class="dis" onclick="dismissRow(event,\'' +
+                 esc(t.driverId) + '\',\'' + esc(t.lastAt || "") + '\')">DISMISS</button></div>'
+               : '') +
            '</div>';
   }).join("");
 }
@@ -330,6 +347,45 @@ function renderList(){
 function openSec(idx){
   var s = (window._secShown || [])[idx];
   if (s) openThread(s.driverId);
+}
+
+/* ── dismiss ──────────────────────────────────────────────────────────── */
+/* Records a per-driver watermark: everything up to and including `through`
+   is handled. A newer inbound message re-flags the thread on its own. */
+function doDismiss(id, through){
+  return call({action:"dismiss", driver:id, through:through, sender:sender})
+    .then(function(d){
+      if (d.error) throw new Error(d.error);
+      return reload(false);
+    })
+    .then(function(){
+      if (current === id) fetchThread(id, false);
+    });
+}
+
+function dismissRow(ev, id, through){
+  ev.stopPropagation();
+  var b = ev.currentTarget;
+  b.disabled = true;
+  b.textContent = "…";
+  doDismiss(id, through).catch(function(e){
+    alert("Didn't dismiss: " + e.message);
+    b.disabled = false;
+    b.textContent = "DISMISS";
+  });
+}
+
+function dismissCurrent(){
+  if (!current) return;
+  var b = document.getElementById("dismiss");
+  var through = b.getAttribute("data-through") || "";
+  b.disabled = true;
+  b.textContent = "Dismissing…";
+  doDismiss(current, through).catch(function(e){
+    alert("Didn't dismiss: " + e.message);
+    b.disabled = false;
+    b.textContent = "Dismiss";
+  });
 }
 
 /* ── thread ───────────────────────────────────────────────────────────── */
@@ -360,6 +416,13 @@ function fetchThread(id, scroll){
     document.getElementById("hId").textContent   = id;
     document.getElementById("hRole").textContent =
       d.role === "FLAT" ? "FLATBED" : d.role === "DV" ? "DRY VAN" : "";
+
+    var db = document.getElementById("dismiss");
+    db.style.display = t.needsReply ? "inline-block" : "none";
+    db.disabled      = false;
+    db.textContent   = "Dismiss";
+    db.setAttribute("data-through", t.lastAt || "");
+
     renderTurns(d.turns || [], scroll);
   });
 }
