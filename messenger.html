@@ -233,14 +233,14 @@ function reload(loud){
       counts = {
         all:        threads.length,
         needsreply: threads.filter(function(x){ return x.needsReply; }).length,
-        securement: (s && s.open) || 0,
+        securement: (s && (s.count !== undefined ? s.count : s.open)) || 0,
         flat:       threads.filter(function(x){ return x.role === "FLAT"; }).length,
         dv:         threads.filter(function(x){ return x.role === "DV"; }).length
       };
 
       document.getElementById("stat").textContent =
         counts.all + " drivers · " + counts.needsreply + " awaiting reply · " +
-        counts.securement + " securement open · " + clock();
+        counts.securement + " securement · " + clock();
 
       paintTabs();
       renderList();
@@ -265,7 +265,7 @@ function paintTabs(){
     var n = document.getElementById("n-" + k);
     if (n && counts[k] !== undefined){
       n.textContent = counts[k];
-      n.classList.toggle("hot", (k === "needsreply" || k === "securement") && counts[k] > 0);
+      n.classList.toggle("hot", k === "needsreply" && counts[k] > 0);
     }
   });
 }
@@ -289,8 +289,7 @@ function renderList(){
     }
 
     el.innerHTML = items.map(function(s, idx){
-      var cls = "row" + (s.answered ? "" : " wait") +
-                (s.driverId === current ? " on" : "");
+      var cls = "row" + (s.driverId === current ? " on" : "");
       var thumbs = (s.photos||[]).slice(0,4).map(function(p){
         return '<img src="' + p.thumb + '" loading="lazy" alt="">';
       }).join("");
@@ -303,8 +302,9 @@ function renderList(){
                  (s.photos||[]).length + ' photo' +
                  ((s.photos||[]).length === 1 ? '' : 's') + '</div>' +
                (thumbs ? '<div class="thumbs">' + thumbs + '</div>' : '') +
-               '<div class="when">' + when(s.at) +
-                 (s.answered ? '' : ' · needs review') + '</div>' +
+               '<div class="when">' + when(s.at) + '</div>' +
+               '<div class="act"><button class="dis" onclick="dismissSec(event,\'' +
+                 esc(s.driverId) + '\',\'' + esc(s.at || '') + '\')">DISMISS</button></div>' +
              '</div>';
     }).join("");
     window._secShown = items;
@@ -352,8 +352,9 @@ function openSec(idx){
 /* ── dismiss ──────────────────────────────────────────────────────────── */
 /* Records a per-driver watermark: everything up to and including `through`
    is handled. A newer inbound message re-flags the thread on its own. */
-function doDismiss(id, through){
-  return call({action:"dismiss", driver:id, through:through, sender:sender})
+function doDismiss(id, through, scope){
+  return call({action:"dismiss", driver:id, through:through,
+               sender:sender, scope:scope || "THREAD"})
     .then(function(d){
       if (d.error) throw new Error(d.error);
       return reload(false);
@@ -361,6 +362,18 @@ function doDismiss(id, through){
     .then(function(){
       if (current === id) fetchThread(id, false);
     });
+}
+
+function dismissSec(ev, id, at){
+  ev.stopPropagation();
+  var b = ev.currentTarget;
+  b.disabled = true;
+  b.textContent = "…";
+  doDismiss(id, at, "SECUREMENT").catch(function(e){
+    alert("Didn't dismiss: " + e.message);
+    b.disabled = false;
+    b.textContent = "DISMISS";
+  });
 }
 
 function dismissRow(ev, id, through){
