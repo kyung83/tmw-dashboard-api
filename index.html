@@ -398,7 +398,7 @@
   <div class="controls">
     <div class="search-wrap">
       <span class="search-icon">⌕</span>
-      <input class="search-input" type="text" id="searchInput" placeholder="Search driver, company, city…" oninput="applySearch()">
+      <input class="search-input" type="text" id="searchInput" placeholder="Search driver, ID, order, company, city…" oninput="applySearch()">
     </div>
     <span class="driver-count" id="driverCount"></span>
     <div class="view-controls">
@@ -625,7 +625,7 @@ function renderArchive() {
       ? terminal.drivers.filter(function(d) {
           return d.driverName.toLowerCase().includes(search) ||
             d.driverID.toLowerCase().includes(search) ||
-            d.stops.some(function(s) { return (s.stopCompany||"").toLowerCase().includes(search) || (s.city||"").toLowerCase().includes(search); });
+            d.stops.some(function(s) { return (s.stopCompany||"").toLowerCase().includes(search) || (s.city||"").toLowerCase().includes(search) || String(s.orderNumber||"").toLowerCase().includes(search); });
         })
       : terminal.drivers;
     if (filtered.length === 0) return;
@@ -687,7 +687,7 @@ function renderArchive() {
       return t.drivers.some(function(d) {
         return d.driverName.toLowerCase().includes(search) ||
           d.driverID.toLowerCase().includes(search) ||
-          d.stops.some(function(s) { return (s.stopCompany||"").toLowerCase().includes(search) || (s.city||"").toLowerCase().includes(search); });
+          d.stops.some(function(s) { return (s.stopCompany||"").toLowerCase().includes(search) || (s.city||"").toLowerCase().includes(search) || String(s.orderNumber||"").toLowerCase().includes(search); });
       });
     });
 
@@ -699,7 +699,7 @@ function renderArchive() {
           ? terminal.drivers.filter(function(d) {
               return d.driverName.toLowerCase().includes(search) ||
                 d.driverID.toLowerCase().includes(search) ||
-                d.stops.some(function(s) { return (s.stopCompany||"").toLowerCase().includes(search) || (s.city||"").toLowerCase().includes(search); });
+                d.stops.some(function(s) { return (s.stopCompany||"").toLowerCase().includes(search) || (s.city||"").toLowerCase().includes(search) || String(s.orderNumber||"").toLowerCase().includes(search); });
             })
           : terminal.drivers;
         if (filtered.length === 0) return;
@@ -951,7 +951,7 @@ function renderBoard(terminals) {
       ? terminal.drivers.filter(d =>
           d.driverName.toLowerCase().includes(search) ||
           d.driverID.toLowerCase().includes(search) ||
-          d.stops.some(s => (s.stopCompany||"").toLowerCase().includes(search) || (s.city||"").toLowerCase().includes(search))
+          d.stops.some(s => (s.stopCompany||"").toLowerCase().includes(search) || (s.city||"").toLowerCase().includes(search) || String(s.orderNumber||"").toLowerCase().includes(search))
         )
       : terminal.drivers;
 
